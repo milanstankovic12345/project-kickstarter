@@ -1,0 +1,14 @@
+{
+  "name": "milan-plugins",
+  "owner": { "name": "milan" },
+  "metadata": {
+    "description": "Milan's Claude Code plugins and skills"
+  },
+  "plugins": [
+    {
+      "name": "project-kickstarter",
+      "source": "./",
+      "description": "Interview-driven project kickstarter: questionnaire -> PRD, tech stack, blueprint, UI/UX, rules, skills, CLAUDE.md, agent team, task plan."
+    }
+  ]
+}

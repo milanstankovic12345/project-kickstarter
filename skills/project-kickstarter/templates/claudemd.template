@@ -1,0 +1,42 @@
+# CLAUDE.md — {{Project Name}}
+
+> Instructions for Claude Code in this repo. Keep this file thin — detailed
+> rules live in `.claude/rules/`, specs in `docs/`.
+
+## Project
+- What: {{1–2 sentences from PRD}}
+- Stack: {{one line from techstack.md}}
+- Spec of record: `docs/prd.md` + `docs/blueprint.md` — when instructions
+  conflict, specs win; flag the conflict to the user.
+
+## Commands
+```bash
+{{install}}        # e.g. pnpm install
+{{dev}}            # e.g. pnpm dev
+{{test}}           # e.g. pnpm test
+{{lint}}           # e.g. pnpm lint && pnpm typecheck
+```
+
+## Rules
+See `.claude/rules/` (loaded automatically). Hard rules:
+- Never commit secrets; never run destructive commands without confirmation.
+- Follow `docs/rules.md`; every task references its task ID from `docs/tasks.md`.
+
+## Agent Team
+| Task type | Delegate to |
+|---|---|
+| Planning/decomposition | tech-lead |
+| Backend work | backend-engineer |
+| Frontend work | frontend-engineer |
+| Test writing | qa-engineer |
+| CI/deploy | devops-engineer |
+| Security review | security-reviewer |
+
+## Docs Map
+- `docs/prd.md` — requirements
+- `docs/techstack.md` — stack decisions
+- `docs/blueprint.md` — architecture
+- `docs/uiux.md` — UI/UX specs
+- `docs/rules.md` — engineering rules (source of truth)
+- `docs/tasks.md` — execution plan
+- `docs/kickstart/` — interview log, codebase analysis, hooks report
