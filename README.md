@@ -46,7 +46,7 @@ and `docs/kickstart/` (interview log, codebase analysis, hooks report).
 Universal one-liner (auto-detects installed agents; requires Node.js):
 
 ```bash
-npx skills add <your-username>/project-kickstarter
+npx skills add milanstankovic12345/project-kickstarter
 ```
 
 ## 1. Claude Code
@@ -56,7 +56,7 @@ npx skills add <your-username>/project-kickstarter
 In Claude Code, run:
 
 ```
-/plugin marketplace add <your-username>/project-kickstarter
+/plugin marketplace add milanstankovic12345/project-kickstarter
 /plugin install project-kickstarter@milan-plugins
 ```
 
@@ -67,7 +67,7 @@ it there (and in the install command) if you fork this repo.
 **Manual copy (terminal):**
 
 ```bash
-git clone https://github.com/<your-username>/project-kickstarter.git
+git clone https://github.com/milanstankovic12345/project-kickstarter.git
 # personal (all your projects):
 mkdir -p ~/.claude/skills
 cp -r project-kickstarter/skills/project-kickstarter ~/.claude/skills/
@@ -94,7 +94,7 @@ and Codex directories** `.claude/skills/`, `.codex/skills/`, `~/.claude/skills/`
 
 ```bash
 # global
-git clone https://github.com/<your-username>/project-kickstarter.git ~/.cursor/skills/project-kickstarter
+git clone https://github.com/milanstankovic12345/project-kickstarter.git ~/.cursor/skills/project-kickstarter
 # project-level
 mkdir -p .cursor/skills
 cp -r /path/to/project-kickstarter/skills/project-kickstarter .cursor/skills/
@@ -113,7 +113,7 @@ cp -r /path/to/project-kickstarter/skills/project-kickstarter .cursor/skills/
 
 ```bash
 # global (auto-discovered at session start)
-git clone https://github.com/<your-username>/project-kickstarter.git ~/.agents/skills/project-kickstarter
+git clone https://github.com/milanstankovic12345/project-kickstarter.git ~/.agents/skills/project-kickstarter
 # or project-level
 mkdir -p .codex/skills
 cp -r /path/to/project-kickstarter/skills/project-kickstarter .codex/skills/
@@ -122,7 +122,7 @@ cp -r /path/to/project-kickstarter/skills/project-kickstarter .codex/skills/
 Alternative via the Codex marketplace CLI:
 
 ```bash
-npx codex-marketplace add <your-username>/project-kickstarter --skills
+npx codex-marketplace add milanstankovic12345/project-kickstarter --skills
 ```
 
 **Settings notes:**
@@ -138,7 +138,7 @@ OpenCode discovers skills from `.agents/skills/`, `.opencode/skills/`, and
 `.claude/skills/` (project) plus `~/.agents/skills/` (global).
 
 ```bash
-git clone https://github.com/<your-username>/project-kickstarter.git ~/.agents/skills/project-kickstarter
+git clone https://github.com/milanstankovic12345/project-kickstarter.git ~/.agents/skills/project-kickstarter
 ```
 
 **Settings notes:**
@@ -149,7 +149,7 @@ git clone https://github.com/<your-username>/project-kickstarter.git ~/.agents/s
 ## 5. GitHub Copilot
 
 ```bash
-git clone https://github.com/<your-username>/project-kickstarter.git ~/.copilot/skills/project-kickstarter
+git clone https://github.com/milanstankovic12345/project-kickstarter.git ~/.copilot/skills/project-kickstarter
 ```
 
 **Settings notes:**
@@ -163,7 +163,7 @@ git clone https://github.com/<your-username>/project-kickstarter.git ~/.copilot/
 ## 6. Antigravity
 
 ```bash
-git clone https://github.com/<your-username>/project-kickstarter.git ~/.antigravity/skills/project-kickstarter
+git clone https://github.com/milanstankovic12345/project-kickstarter.git ~/.antigravity/skills/project-kickstarter
 ```
 
 **Settings notes:**
@@ -198,6 +198,41 @@ cp /path/to/project-kickstarter/skills/project-kickstarter/SKILL.md .windsurf/ru
 **Settings notes:**
 - Windsurf reads `.windsurf/rules/*.md` (legacy `.windsurfrules` also works).
 - No native hooks; rules-based enforcement per the generated hooks report.
+
+## 9. Bionic (LM Studio)
+
+Bionic is LM Studio's built-in coding agent. It loads skills from
+`~/.lmstudio/skills/` (global — all your projects) and
+`.agents/skills/` (project-level — the same folder Codex CLI and OpenCode
+use, so one install covers both).
+
+```bash
+git clone https://github.com/milanstankovic12345/project-kickstarter.git
+# global (all your Bionic projects):
+mkdir -p ~/.lmstudio/skills
+cp -r project-kickstarter/skills/project-kickstarter ~/.lmstudio/skills/
+# or project-level (shared via repo):
+mkdir -p /path/to/your-project/.agents/skills
+cp -r project-kickstarter/skills/project-kickstarter /path/to/your-project/.agents/skills/
+```
+
+On Windows, the global folder is `%USERPROFILE%\.lmstudio\skills`
+(e.g. `C:\Users\<you>\.lmstudio\skills\`).
+
+**Settings notes:**
+- The skill folder name must match the `name` in the `SKILL.md` front matter
+  (`project-kickstarter`) — keep it unchanged when copying.
+- Trigger manually by typing `@project-kickstarter` in the input box, or
+  simply describe the project — Bionic invokes the skill automatically when
+  its description matches your request.
+- Global skills can be enabled/disabled in **Settings → Skills**
+(bottom-left of Bionic). Project skills are always active.
+- Bionic reads the whole skill folder, so `references/` and `templates/`
+travel together with `SKILL.md` — copy the folder, not just the file.
+- No native hook events and no persistent subagent files: in Phase 5,
+Bionic relies on `docs/rules.md` as the source of truth, and hook
+enforcement is documented in `docs/kickstart/hooks-report.md`
+(rules + CI instead of hooks).
 
 ---
 
@@ -238,6 +273,7 @@ git tag v0.2.0 && git push origin v0.2.0
 # Claude Code: /plugin update project-kickstarter   (or reinstall)
 # skills.sh:   npx skills update
 # cloned dirs: git -C ~/.agents/skills/project-kickstarter pull
+# Bionic:      git -C ~/.lmstudio/skills/project-kickstarter pull
 ```
 
 One repo = one source of truth. Never maintain per-IDE copies; all tools

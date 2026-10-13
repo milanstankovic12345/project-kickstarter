@@ -1,6 +1,6 @@
 {
   "name": "project-kickstarter",
-  "description": "Interview-driven project kickstarter: confidence-based 4-option questionnaire (30-100 questions), codebase analysis, then generates PRD, tech stack, blueprint, UI/UX design, rules, project skills, CLAUDE.md, a complete agent team, IDE configs for Claude Code/Cursor/Codex/Copilot/Cline/OpenCode/Windsurf/Antigravity, and an execution-ready task plan.",
+  "description": "Interview-driven project kickstarter: confidence-based 4-option questionnaire (30-100 questions), codebase analysis, then generates PRD, tech stack, blueprint, UI/UX design, rules, project skills, CLAUDE.md, a complete agent team, IDE configs for Claude Code/Cursor/Codex/Copilot/Cline/OpenCode/Windsurf/Antigravity/Bionic, and an execution-ready task plan.",
   "version": "0.1.0",
   "author": { "name": "milan" }
 }

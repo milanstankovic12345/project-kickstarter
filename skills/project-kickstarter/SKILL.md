@@ -46,7 +46,8 @@ phase without the user asking.
 3. Detect installed agentic IDEs/configs (`.claude/`, `AGENTS.md`,
    `.cursor/`, `.github/copilot-instructions.md`, `.clinerules/`,
    `.windsurf/`, `opencode.json`, `.agent/`) and record them — Phase 5 needs
-   this.
+   this. **Bionic (LM Studio)** leaves no project-level marker, so ask the
+   user whether they run it and record it the same way.
 
 ### Phase 1 — Complexity tier
 

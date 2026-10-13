@@ -16,6 +16,7 @@ support.
 | **Cline** | `.clinerules/` (`.clinerules` also works) | `.clinerules/*.md` | workflow files `.clinerules/workflows/` | ⚠️ via workflows | ❌ — emulate with rules + CI |
 | **Windsurf** | `.windsurf/rules/*.md` (legacy `.windsurfrules`) | `.windsurf/rules/` | — | ⚠️ | ❌ |
 | **Antigravity** | `AGENTS.md` / `.agent/rules/` | `.agent/rules/` | — | ⚠️ | ❌ — verify current support at generation time |
+| **Bionic (LM Studio)** | ❌ none documented — treat `docs/rules.md` as the source of truth | — | ❌ no persistent subagent files | ✅ `~/.lmstudio/skills/` (global), `.agents/skills/` (project) | ❌ not supported — rules + CI |
 
 Rules of thumb:
 - `AGENTS.md` is the emerging cross-tool standard: always write it, and keep
@@ -40,6 +41,13 @@ Rules of thumb:
   desired enforcement points → how it's enforced instead (rule file +
   which CI job). Be explicit that enforcement is advisory there, not
   blocking.
+- **Bionic (LM Studio)** has no hook events and no persistent agent files.
+  Users trigger skills by typing `@<skill-name>` in the input box (or the
+  agent auto-invokes when the description matches); skills live in
+  `~/.lmstudio/skills/` (global, toggleable in Settings → Skills) or
+  `<project>/.agents/skills/` (always active). In Phase 4/5, generate only
+  docs and rule files for Bionic — do not emit `.claude/agents/` or hook
+  configs for it.
 
 ## Verification step (always do)
 
