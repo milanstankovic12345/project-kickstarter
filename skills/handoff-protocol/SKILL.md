@@ -100,7 +100,7 @@ file, not the chat. The final message must contain this block:
 
 ```
 HANDOFF
-task: TASK-NNN
+task: TASK-NNN   (AUDIT-<yyyymmdd>[-scope] for audits, none if you had no task)
 status: done | done_with_concerns | blocked | failed
 handoff: reports/handoffs/TASK-NNN.md   (or reports/reviews/TASK-NNN-<kind>.md)
 tests: <n passed / n failed, or "not run: reason">
