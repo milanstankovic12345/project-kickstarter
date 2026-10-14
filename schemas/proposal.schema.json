@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project-kickstarter/proposal.schema.json",
+  "title": "Improvement proposal frontmatter (reports/improvements/PROP-NNN-slug.md)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "status", "targets", "evidence", "hypothesis", "baseline", "success_metric", "sensitive", "rollback", "created"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^PROP-[0-9]{3,}$" },
+    "title": { "type": "string", "minLength": 5, "maxLength": 120 },
+    "status": { "enum": ["proposed", "approved", "rejected", "applied", "evaluated", "rolled_back"] },
+    "targets": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "evidence": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 10 } },
+    "hypothesis": { "type": "string", "minLength": 10 },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenario", "command", "result"],
+      "properties": {
+        "scenario": { "type": "string", "minLength": 5 },
+        "command": { "type": "string", "minLength": 1 },
+        "result": { "type": "string", "minLength": 1 }
+      }
+    },
+    "success_metric": { "type": "string", "minLength": 5 },
+    "sensitive": { "type": "boolean" },
+    "approved_by": { "type": ["string", "null"] },
+    "version_bump": { "enum": ["patch", "minor", "major", null] },
+    "rollback": { "type": "string", "minLength": 5 },
+    "result": { "type": ["string", "null"] },
+    "created": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}" }
+  }
+}

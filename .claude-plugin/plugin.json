@@ -1,6 +1,9 @@
 {
   "name": "project-kickstarter",
-  "description": "Interview-driven project kickstarter: confidence-based 4-option questionnaire (30-100 questions), codebase analysis, then generates PRD, tech stack, blueprint, UI/UX design, rules, project skills, CLAUDE.md, a complete agent team, IDE configs for Claude Code/Cursor/Codex/Copilot/Cline/OpenCode/Windsurf/Antigravity/Bionic, and an execution-ready task plan.",
-  "version": "0.1.0",
-  "author": { "name": "milan" }
+  "description": "Interview-driven project kickstarter plus an adaptive multi-agent engineering framework: project discovery and bootstrap, task system with lifecycle and handoffs, orchestrated specialist agents with model routing, independent code/security/UI review with blocking gates, guardrail hooks and evidence-based self-improvement.",
+  "version": "0.2.0",
+  "author": { "name": "milan" },
+  "homepage": "https://github.com/milanstankovic12345/project-kickstarter",
+  "repository": "https://github.com/milanstankovic12345/project-kickstarter",
+  "keywords": ["kickstart", "multi-agent", "orchestration", "code-review", "security", "ui", "tasks", "subagents"]
 }

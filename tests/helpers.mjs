@@ -115,5 +115,9 @@ export function run(script, args, { cwd, input, env } = {}) {
   const res = spawnSync(process.execPath, [join(REPO, script), ...args], {
     cwd, input, encoding: "utf8", env: { ...process.env, ...env },
   });
+  // A crash must never satisfy an "exits non-zero" assertion by accident.
+  if (/\b(SyntaxError|ReferenceError|TypeError|RangeError):/.test(res.stderr ?? "")) {
+    throw new Error(`${script} crashed:\n${res.stderr}`);
+  }
   return { code: res.status, stdout: res.stdout, stderr: res.stderr };
 }
