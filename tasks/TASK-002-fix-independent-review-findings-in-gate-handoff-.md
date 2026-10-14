@@ -1,7 +1,7 @@
 ---
 id: TASK-002
 title: Fix independent review findings in gate, handoff scope and guards
-status: review
+status: failed
 agent: implementer
 skills: []
 model_tier: coding
@@ -33,6 +33,7 @@ max_retries: 2
 attempts: 2
 created: 2026-10-14
 updated: 2026-10-14
+blocked_reason: "retry budget exhausted after 3 review rounds: open high CR-5 (framework-script heredoc false positive) and SEC-9 (cd/pushd relative writes to protected paths); needs human decision"
 ---
 
 ## Objective

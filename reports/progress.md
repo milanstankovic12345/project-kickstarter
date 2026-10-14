@@ -7,3 +7,4 @@ Append-only. One line per orchestration event. Survives context compaction.
 - 2026-10-14 TASK-003 done (independent review approve; 4 sub-threshold cosmetic notes recorded)
 - 2026-10-14 TASK-002 fix round 2: code CR-1(high) + security SEC-1(high) blocking; round-1 evidence archived
 - 2026-10-14 TASK-002 fix round 3 (attempt 2/2, final): security SEC-1 high still open; model escalated per routing
+- 2026-10-14 TASK-002 FAILED after 3 rounds (2/2 retries); open: CR-5 high, SEC-9 high, SEC-10 low; escalated to human

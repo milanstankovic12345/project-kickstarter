@@ -30,3 +30,7 @@
 {"ts":"2026-10-14T21:55:01.823Z","type":"transition","task":"TASK-002","from":"review","to":"in_progress","agent":"implementer","attempts":2,"reason":null}
 {"ts":"2026-10-14T21:57:07.833Z","type":"handoff_saved","task":"TASK-002","status":"done","agent":"implementer"}
 {"ts":"2026-10-14T21:57:07.918Z","type":"transition","task":"TASK-002","from":"in_progress","to":"review","agent":"implementer","attempts":2,"reason":null}
+{"ts":"2026-10-14T21:58:25.889Z","type":"review_saved","task":"TASK-002","kind":"code","reviewer":"code-reviewer","verdict":"block","findings":{"critical":0,"high":2,"medium":3,"low":0,"info":0}}
+{"ts":"2026-10-14T21:59:59.899Z","type":"review_saved","task":"TASK-002","kind":"security","reviewer":"security-reviewer","verdict":"block","findings":{"critical":0,"high":2,"medium":2,"low":6,"info":0}}
+{"ts":"2026-10-14T22:00:00.051Z","type":"transition_rejected","task":"TASK-002","from":"review","to":"in_progress","errors":["retry budget exhausted (2/2); transition to failed and escalate to a human"]}
+{"ts":"2026-10-14T22:00:00.153Z","type":"transition","task":"TASK-002","from":"review","to":"failed","agent":"implementer","attempts":2,"reason":"retry budget exhausted after 3 review rounds: open high CR-5 (framework-script heredoc false positive) and SEC-9 (cd/pushd relative writes to protected paths); needs human decision"}
