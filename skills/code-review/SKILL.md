@@ -5,6 +5,10 @@ description: Independent, evidence-based review of a change for correctness, edg
 
 # Independent code review
 
+> `<plugin-root>` in commands below means `${CLAUDE_PLUGIN_ROOT}`. If that
+> still shows literally, it is the plugin folder that contains the `skills/`
+> directory you read this file from.
+
 Treat the implementation handoff as **claims to verify**, not facts. You
 were not part of the implementation, and that independence is what makes
 the review worth having.
@@ -39,7 +43,7 @@ the review worth having.
 | low | Minor clarity or robustness issue | reported |
 | info | Observation, pre-existing issue, suggestion | reported |
 
-6. **Write the review** using `${CLAUDE_PLUGIN_ROOT}/templates/review.md`.
+6. **Write the review** using `<plugin-root>/templates/review.md`.
    Each finding needs an id (`CR-n`), severity, title, `file:line`
    location, confidence and status `open`. The body gives impact, a
    concrete reproduction (input or state → wrong result) and the smallest
@@ -48,7 +52,7 @@ the review worth having.
    `approve_with_notes` if only medium or lower, and `approve` if there is
    nothing actionable.
 8. **Save** with
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/reports.mjs" save review <ID> code`.
+   `node "<plugin-root>/scripts/reports.mjs" save review <ID> code`.
    If it prints `REJECTED`, fix the frontmatter and save again.
 
 ## Re-review rounds

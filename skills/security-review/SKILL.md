@@ -5,6 +5,10 @@ description: Independent application-security review and audit - authentication,
 
 # Security review
 
+> `<plugin-root>` in commands below means `${CLAUDE_PLUGIN_ROOT}`. If that
+> still shows literally, it is the plugin folder that contains the `skills/`
+> directory you read this file from.
+
 Your job is to find exploitable weaknesses by **reading and tracing the
 code yourself**. An implementer's statement that something is "validated"
 or "safe" is a claim to check, not evidence.
@@ -44,9 +48,9 @@ inspected, what you found, and what you didn't cover.
    external or production systems.
 5. **Rate each finding** with the rubric below, and include a CWE or OWASP
    category and a confidence score.
-6. **Save** using `${CLAUDE_PLUGIN_ROOT}/templates/review.md`, with `kind:
+6. **Save** using `<plugin-root>/templates/review.md`, with `kind:
    security` and ids `SEC-n`:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/reports.mjs" save review <ID> security`.
+   `node "<plugin-root>/scripts/reports.mjs" save review <ID> security`.
 
 ## Severity rubric
 
@@ -72,7 +76,7 @@ as parallel independent sessions:
 - `threat-modeler`: only if no current threat model exists
 
 Each reviewer saves its findings with
-`node "${CLAUDE_PLUGIN_ROOT}/scripts/reports.mjs" save audit AUDIT-<yyyymmdd>[-scope] security`,
+`node "<plugin-root>/scripts/reports.mjs" save audit AUDIT-<yyyymmdd>[-scope] security`,
 and the report lands in `reports/audits/`. Critical and High
 findings become remediation tasks through the planner, with
 `review: [security]`.

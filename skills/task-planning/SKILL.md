@@ -5,6 +5,10 @@ description: Decomposes goals, specs, audits or review findings into small, self
 
 # Task planning
 
+> `<plugin-root>` in commands below means `${CLAUDE_PLUGIN_ROOT}`. If that
+> still shows literally, it is the plugin folder that contains the `skills/`
+> directory you read this file from.
+
 The orchestrator can only run what you specify precisely. A good task:
 one agent, one session, one objective, a bounded set of files, and a
 pass/fail check that a script can run.
@@ -25,7 +29,7 @@ pass/fail check that a script can run.
    - you can't name its validation command.
 4. **Create the files.** For each task:
    ```bash
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/tasks.mjs" new --title "..." --agent <agent> \
+   node "<plugin-root>/scripts/tasks.mjs" new --title "..." --agent <agent> \
      --scope "src/feature/**,tests/feature/**" --depends TASK-002 \
      --validation "npm test -- feature;;npm run lint" --acceptance "criterion one;;criterion two" \
      --tier coding --review code

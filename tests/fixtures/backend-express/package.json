@@ -1,0 +1,19 @@
+{
+  "name": "fx-backend",
+  "private": true,
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "jest",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "pg": "^8.13.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcrypt": "^5.1.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^9.0.0"
+  }
+}

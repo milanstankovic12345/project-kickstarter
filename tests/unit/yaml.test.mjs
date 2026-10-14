@@ -93,3 +93,9 @@ test("missing frontmatter is reported, not thrown", () => {
   const fm = parseFrontmatter("# just markdown");
   assert.equal(fm.hasFrontmatter, false);
 });
+
+test("plain scalars containing ': ' are rejected like real YAML parsers do", () => {
+  assert.throws(() => parseYaml("description: Reviews code: correctness and style"), /quote the value/);
+  assert.equal(parseYaml('description: "Reviews code: correctness"').description, "Reviews code: correctness");
+  assert.equal(parseYaml("url: https://x.dev/a:b").url, "https://x.dev/a:b", "colon without space is fine");
+});

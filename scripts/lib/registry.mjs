@@ -72,6 +72,8 @@ export function knownSkillNames(root) {
 export function subagentType(agentName, root) {
   const reg = loadRegistry();
   if (agentName.includes(":")) return agentName;
+  const alias = root ? loadConfig(root).agent_aliases?.[agentName] : undefined;
+  if (alias) return alias; // existing project agent covering this role
   if (reg.agents[agentName]) {
     // Prefer a project-level override with the same name if one exists.
     const local = readAgents(join(root, ".claude", "agents")).find((a) => a.name === agentName);

@@ -94,6 +94,10 @@ export function validateTaskSet(root, { config = loadConfig(root), knownAgents, 
     const steps = countSteps(t.body);
     if (steps > limits.max_steps) warn(t, `${steps} steps (> ${limits.max_steps}); task may not fit one agent session — split it`);
     if (d.status === "blocked" && !d.blocked_reason) err(t, "status blocked requires blocked_reason");
+    const placeholder = (v) => typeof v === "string" && /<fill in[^>]*>/.test(v);
+    if (d.status !== "draft" && ((d.validation ?? []).some((v) => placeholder(v?.cmd)) || (d.acceptance ?? []).some(placeholder))) {
+      err(t, "contains <fill in ...> placeholders; only draft tasks may have placeholders");
+    }
     if (knownAgents && typeof d.agent === "string" && !knownAgents.has(d.agent)) err(t, `unknown agent "${d.agent}"`);
     if (knownSkills && Array.isArray(d.skills)) for (const s of d.skills) if (!knownSkills.has(s)) warn(t, `unknown skill "${s}"`);
     if (typeof d.title === "string") {

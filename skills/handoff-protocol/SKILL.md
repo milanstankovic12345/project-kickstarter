@@ -6,6 +6,10 @@ user-invocable: false
 
 # Agent working protocol
 
+> `<plugin-root>` in commands below means `${CLAUDE_PLUGIN_ROOT}`. If that
+> still shows literally, it is the plugin folder that contains the `skills/`
+> directory you read this file from. Your brief also states it as "Plugin root".
+
 You are one agent working on **one task** in one session. The orchestrator
 gave you paths, not history. Everything you need is in the task file, the
 project profile and the files they reference. Everything the next session
@@ -55,7 +59,7 @@ Save the handoff through the validator. It checks the schema, the scope and
 the evidence:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/reports.mjs" save handoff TASK-NNN <<'EOF'
+node "<plugin-root>/scripts/reports.mjs" save handoff TASK-NNN <<'EOF'
 ---
 task: TASK-NNN
 agent: <your agent name>
@@ -86,8 +90,8 @@ If the script prints `REJECTED`, fix what it lists and save again. Never
 save a handoff that hides a failing command.
 
 Reviewers and auditors save reviews the same way:
-`node "${CLAUDE_PLUGIN_ROOT}/scripts/reports.mjs" save review TASK-NNN <code|security|ui|architecture>`.
-The format is `${CLAUDE_PLUGIN_ROOT}/templates/review.md`.
+`node "<plugin-root>/scripts/reports.mjs" save review TASK-NNN <code|security|ui|visual|architecture>`.
+The format is `<plugin-root>/templates/review.md`.
 
 ## 5. Final message (what the orchestrator sees)
 

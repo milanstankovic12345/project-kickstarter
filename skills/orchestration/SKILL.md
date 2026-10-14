@@ -5,6 +5,10 @@ description: Executes the framework task loop - selects dependency-ready, confli
 
 # Orchestration loop
 
+> `<plugin-root>` in commands below means `${CLAUDE_PLUGIN_ROOT}`. If that
+> still shows literally, it is the plugin folder that contains the `skills/`
+> directory you read this file from.
+
 You are the controller. You **delegate**. You do not edit source, write
 tests, or review code yourself. Your job is selection, dispatch,
 verification of the process, state transitions and reporting.
@@ -13,7 +17,7 @@ Deterministic decisions are made by scripts. Your job is to run them and
 act on their output:
 
 ```bash
-PK="${CLAUDE_PLUGIN_ROOT}/scripts"
+PK="<plugin-root>/scripts"
 node "$PK/tasks.mjs" validate            # task set is consistent
 node "$PK/tasks.mjs" batches --json      # what can run now, in parallel, without conflicts
 node "$PK/tasks.mjs" transition <ID> <state> [--reason "..."]
@@ -23,10 +27,6 @@ node "$PK/reports.mjs" check handoff <ID>
 node "$PK/gate.mjs" check <ID>
 node "$PK/reports.mjs" progress "<one line>"
 ```
-
-`${CLAUDE_PLUGIN_ROOT}` is substituted in this file. Don't rely on it
-existing as an environment variable inside Bash: use the expanded path as
-written above.
 
 ## 0. Preflight (every session, including resumes)
 
@@ -81,7 +81,8 @@ Task file: tasks/TASK-007-<slug>.md
 Project profile: project-context/project-profile.md
 Attempt: <attempts from task>   Previous review(s): <paths or "none">
 Base commit: <sha>
-Protocol: read ${CLAUDE_PLUGIN_ROOT}/skills/handoff-protocol/SKILL.md first.
+Plugin root: <plugin-root>   (use this absolute path in every framework command)
+Protocol: read <plugin-root>/skills/handoff-protocol/SKILL.md first.
 Return only the HANDOFF block described in the protocol.
 ```
 
@@ -109,10 +110,11 @@ Return only the HANDOFF block described in the protocol.
    independent and read-only. Use this brief:
 
 ```
+Plugin root: <plugin-root>
 Review kind: <kind>   Task file: tasks/TASK-007-<slug>.md
 Implementation handoff (claims to verify, not facts): reports/handoffs/TASK-007.md
 Diff: git diff <base-sha> -- <files_modified from handoff>
-Save via: node "${CLAUDE_PLUGIN_ROOT}/scripts/reports.mjs" save review TASK-007 <kind>
+Save via: node "<plugin-root>/scripts/reports.mjs" save review TASK-007 <kind>
 Round: <n>   Previous review (if re-review): reports/reviews/TASK-007-<kind>.md
 ```
 
@@ -139,7 +141,7 @@ Run `gate.mjs check <ID>`.
      `fixed` with `verified: true`, or keep it `open`.
 - **Critical/High that the user wants to accept** → you cannot accept risk.
   Ask the user to add an entry to `project-context/risk-acceptances.md`
-  (format in `${CLAUDE_PLUGIN_ROOT}/docs/architecture/security-model.md`).
+  (format in `<plugin-root>/docs/architecture/security-model.md`).
   Editing that file triggers a permission prompt. The reviewer then marks
   the finding `accepted` with `acceptance_ref`.
 

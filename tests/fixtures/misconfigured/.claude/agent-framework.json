@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "enabled_agents": [
+    "implementer",
+    "ghost-agent"
+  ],
+  "agent_aliases": {
+    "test-engineer": "missing-local-agent"
+  },
+  "routing": {
+    "tiers": {
+      "coding": {
+        "model": "gpt-4"
+      }
+    }
+  },
+  "unknown_key": true
+}
