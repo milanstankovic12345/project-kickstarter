@@ -82,7 +82,9 @@ function main() {
       const id = args._[1];
       const t = loadTasks(root, config).tasks.find((x) => x.data.id === id);
       if (!t) throw new Error(`task ${id} not found`);
-      print({ task: id, required: requiredReviewKinds(t, config) }, (o) => o.required.join(" "));
+      const required = requiredReviewKinds(t, config);
+      const reviewers = required.map((kind) => ({ kind, agent: config.review_agents?.[kind] ?? null }));
+      print({ task: id, required, reviewers }, (o) => o.required.join(" "));
       return;
     }
     case "next-id": {

@@ -16,7 +16,7 @@
     "depends_on": { "type": "array", "items": { "type": "string", "pattern": "^TASK-[0-9]{3,}$" }, "uniqueItems": true },
     "files_allowed": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
     "files_excluded": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
-    "review": { "type": "array", "items": { "enum": ["code", "security", "ui", "architecture"] }, "uniqueItems": true },
+    "review": { "type": "array", "items": { "enum": ["code", "security", "ui", "visual", "architecture"] }, "uniqueItems": true },
     "validation": {
       "type": "array",
       "minItems": 1,

@@ -18,8 +18,13 @@
     "hard_cap": 5
   },
   "gates": {
-    "required_reviews": ["code"],
-    "block_severities": ["critical", "high"],
+    "required_reviews": [
+      "code"
+    ],
+    "block_severities": [
+      "critical",
+      "high"
+    ],
     "require_verified_fix": true,
     "security_review_on_sensitive_paths": true
   },
@@ -56,5 +61,12 @@
   ],
   "enabled_agents": [],
   "specialists": [],
-  "validation_commands": {}
+  "validation_commands": {},
+  "review_agents": {
+    "code": "code-reviewer",
+    "security": "security-reviewer",
+    "ui": "accessibility-auditor",
+    "visual": "visual-qa",
+    "architecture": "architecture-reviewer"
+  }
 }

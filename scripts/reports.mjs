@@ -6,10 +6,11 @@
 //   node scripts/reports.mjs save review <TASK-ID> <kind>    < review.md
 //   node scripts/reports.mjs check handoff <TASK-ID>
 //   node scripts/reports.mjs check review <TASK-ID> <kind>
+//   node scripts/reports.mjs save audit <AUDIT-YYYYMMDD[-slug]> <kind> < review.md   (repo-wide audits, no task)
 //   node scripts/reports.mjs progress "<line>"   (append to the progress ledger)
 // Options: --root <dir> --json
 import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, renameSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { parseArgs, findProjectRoot, loadConfig, frameworkPaths, loadSchema, rel, appendEvent, today } from "./lib/project.mjs";
 import { loadTasks } from "./lib/tasks.mjs";
 import { validateHandoffForTask, handoffPath } from "./lib/handoff.mjs";
@@ -51,6 +52,28 @@ function validateReviewText(text, task, kindName) {
   return errors;
 }
 
+function saveAudit(config) {
+  if (!/^AUDIT-\d{8}(-[a-z0-9-]+)?$/.test(id ?? "")) throw new Error("audit id must look like AUDIT-20261014 or AUDIT-20261014-auth");
+  if (!["code", "security", "ui", "visual", "architecture"].includes(reviewKind)) throw new Error("audit kind must be code|security|ui|visual|architecture");
+  const text = readStdin();
+  const errors = [];
+  let parsed;
+  try { parsed = parseFrontmatter(text); } catch (e) { errors.push(`unparseable frontmatter: ${e.message}`); }
+  if (parsed && !parsed.hasFrontmatter) errors.push("missing YAML frontmatter");
+  if (parsed?.hasFrontmatter) {
+    errors.push(...validateSchema(loadSchema("review"), parsed.data).map((e) => `schema ${e}`));
+    if (parsed.data.task !== id) errors.push(`frontmatter task "${parsed.data.task}" must equal ${id}`);
+    if (parsed.data.kind !== reviewKind) errors.push(`frontmatter kind "${parsed.data.kind}" must equal ${reviewKind}`);
+  }
+  if (errors.length) return out({ ok: false, message: "audit not saved", errors });
+  const target = join(root, "reports", "audits", `${id}-${reviewKind}.md`);
+  atomicWrite(target, text);
+  const data = parsed.data;
+  appendEvent(root, { type: "audit_saved", audit: id, kind: reviewKind, reviewer: data.reviewer, verdict: data.verdict,
+    findings: Object.fromEntries(["critical", "high", "medium", "low", "info"].map((s) => [s, data.findings.filter((f) => f.severity === s).length])) }, config);
+  return out({ ok: true, message: `saved ${rel(root, target)}` });
+}
+
 function atomicWrite(path, text) {
   mkdirSync(dirname(path), { recursive: true });
   const tmp = `${path}.tmp-${process.pid}`;
@@ -69,8 +92,9 @@ function main() {
     appendFileSync(p, `- ${today()} ${line.replace(/\s*\n\s*/g, " ")}\n`);
     return out({ ok: true, message: `appended to ${rel(root, p)}` });
   }
+  if (action === "save" && kind === "audit") return saveAudit(config);
   if (!["save", "check"].includes(action) || !["handoff", "review"].includes(kind) || !id) {
-    throw new Error("usage: reports.mjs <save|check> <handoff|review> <TASK-ID> [kind]");
+    throw new Error("usage: reports.mjs <save|check> <handoff|review|audit> <ID> [kind]");
   }
   const task = loadTasks(root, config).tasks.find((t) => t.data.id === id);
   if (!task) return out({ ok: false, message: `task ${id} not found`, errors: [] });
@@ -97,7 +121,7 @@ function main() {
     return out({ ok: res.errors.length === 0, message: `${rel(root, target)}`, errors: res.errors, warnings: res.warnings });
   }
 
-  if (!["code", "security", "ui", "architecture"].includes(reviewKind)) throw new Error("review kind must be code|security|ui|architecture");
+  if (!["code", "security", "ui", "visual", "architecture"].includes(reviewKind)) throw new Error("review kind must be code|security|ui|visual|architecture");
   const target = reviewPath(root, id, reviewKind, config);
   if (action === "save") {
     const text = readStdin();

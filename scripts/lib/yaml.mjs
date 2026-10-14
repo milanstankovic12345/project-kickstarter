@@ -56,6 +56,9 @@ export function parseScalar(raw, lineNo) {
     if (!text.endsWith("'") || text.length < 2) throw new YamlError("Unterminated single-quoted string", lineNo);
     return text.slice(1, -1).replace(/''/g, "'");
   }
+  // Real YAML parsers reject ": " inside a plain scalar ("mapping values are
+  // not allowed here"); mirror that so files validated here load in Claude Code.
+  if (/:\s/.test(text)) throw new YamlError(`Plain scalar contains ": " — quote the value: ${text.slice(0, 50)}`, lineNo);
   if (/^(true|True|TRUE)$/.test(text)) return true;
   if (/^(false|False|FALSE)$/.test(text)) return false;
   if (/^[-+]?\d+$/.test(text)) return Number.parseInt(text, 10);

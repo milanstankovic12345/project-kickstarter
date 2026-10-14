@@ -8,7 +8,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs, findProjectRoot, pluginFile, loadConfig } from "./lib/project.mjs";
 import { effectiveRouting, checkRouting, resolveModel } from "./lib/routing.mjs";
-import { loadRegistry } from "./lib/registry.mjs";
+import { loadRegistry, subagentType } from "./lib/registry.mjs";
 import { parseFrontmatter, setFrontmatterScalars } from "./lib/frontmatter.mjs";
 import { loadTasks } from "./lib/tasks.mjs";
 
@@ -40,6 +40,9 @@ function main() {
     }
     const unavailable = typeof args.flags.unavailable === "string" ? args.flags.unavailable.split(",") : [];
     const res = resolveModel(agent, { root, taskTier, attempt, unavailable });
+    res.subagent_type = subagentType(agent, root);
+    const enabled = loadConfig(root).enabled_agents ?? [];
+    res.enabled = enabled.length === 0 || enabled.includes(res.agent) || !registry.agents[res.agent];
     process.stdout.write((json ? JSON.stringify(res, null, 2) : `${res.model}`) + "\n");
     return;
   }
