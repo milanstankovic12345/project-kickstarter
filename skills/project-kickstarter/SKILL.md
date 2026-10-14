@@ -102,19 +102,36 @@ Every claim must trace back to an answer ID (`Q14 → B`) or be marked
 
 ### Phase 4 — Agent team, skills, rules
 
-Following `references/agent-team-blueprints.md`:
+**Detect the framework first.** It is available when this skill was loaded
+from the project-kickstarter plugin, so that
+`${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap.mjs` exists. Check with
+`node -e "process.exit(require('fs').existsSync(process.argv[1])?0:1)" "${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap.mjs"`.
 
-- Write `.claude/agents/<role>.md` for each team member (Claude Code
-  subagent format).
-- Write `.claude/skills/<project-skill>/SKILL.md` for project-specific
-  skills (conventions, domain glossary, runbook) derived from the answers.
-- Write `.claude/rules/*.md` from `docs/rules.md` split into focused files.
+- **Framework available (Claude Code plugin install):** don't copy agent
+  templates. Invoke the `project-kickstarter:project-bootstrap` skill
+  (audit → plan → apply). It enables only the framework agents this
+  project needs, reuses existing ones, generates justified specialists,
+  and writes the project profile and config. Then add what bootstrap
+  doesn't cover:
+  - `.claude/skills/<project>-conventions|domain|runbook/SKILL.md`, from
+    the answers. Only the relevant ones.
+  - `.claude/rules/*.md`, from `docs/rules.md`.
+- **Framework not available** (skill-only install, or an IDE without
+  plugins): fall back to the templates. Write `.claude/agents/<role>.md`
+  for each team member following
+  `references/agent-team-blueprints.md`, plus the same project skills and
+  rules as above.
 
 ### Phase 5 — CLAUDE.md, IDE configs, hooks
 
 Following `references/ide-compatibility.md`:
 
 - Generate `CLAUDE.md` (template in `templates/`).
+  - **Framework available:** replace the template's "Agent Team" table
+    with a single pointer to `/project-kickstarter:run-task` and
+    `/project-kickstarter:status`. Then re-run
+    `bootstrap.mjs apply` (idempotent) so it adds its marker section to
+    the new CLAUDE.md.
 - For every IDE detected in Phase 0 (or every IDE the user names): write the
   correct instructions/rules files (AGENTS.md, `.cursor/rules/`,
   `.github/copilot-instructions.md`, `.clinerules/`, …) so all tools share
@@ -127,14 +144,31 @@ Following `references/ide-compatibility.md`:
 
 ### Phase 6 — Task plan
 
-Generate `docs/tasks.md`: phased, dependency-ordered tasks with acceptance
-criteria and a suggested owning agent per task (from the Phase 4 team).
+- **Framework available:**
+  1. Follow the `project-kickstarter:task-planning` skill. Turn the PRD
+     user stories and blueprint components into `tasks/TASK-NNN-*.md`
+     files: one-session tasks with file scopes, dependencies, exact
+     validation commands and acceptance criteria taken from the stories.
+  2. Run `${CLAUDE_PLUGIN_ROOT}/scripts/tasks.mjs validate` until it
+     passes.
+  3. Write `docs/tasks.md` as a short index: the phases, plus the output
+     of `tasks.mjs status`.
+- **Framework not available:** generate `docs/tasks.md` from
+  `templates/tasks.md`: phased, dependency-ordered tasks with acceptance
+  criteria and an owning agent from the Phase 4 team.
 
 ### Phase 7 — Handoff
 
-Print: what was generated, where, the confidence score, the list of remaining
-`[ASSUMPTION]` items, and the suggested first prompt to begin execution, e.g.
-"Execute Phase 1 of docs/tasks.md as tech-lead; delegate per the plan."
+Print:
+- what was generated, and where;
+- the confidence score;
+- the remaining `[ASSUMPTION]` items;
+- the next step:
+  - framework available: promote the reviewed tasks with
+    `tasks.mjs transition <ID> ready`, then run
+    `/project-kickstarter:run-task`;
+  - fallback: "Execute Phase 1 of docs/tasks.md as tech-lead; delegate per
+    the plan."
 
 ## Output contract (all phases)
 

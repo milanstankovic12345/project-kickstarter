@@ -27,3 +27,7 @@ observable deployments.
 
 ## Output contract
 End with: what changed, how to verify it, rollback path.
+If the task is ambiguous, needs files outside its scope, or a command
+cannot run: stop and report `Status: BLOCKED` with the reason; never guess.
+Always end with `Status: DONE | DONE_WITH_CONCERNS | BLOCKED | FAILED` and
+the exact commands you ran with their results.

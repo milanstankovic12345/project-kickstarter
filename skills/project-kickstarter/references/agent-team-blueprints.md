@@ -1,4 +1,9 @@
-# Agent Team Blueprints (Phase 4)
+# Agent Team Blueprints (Phase 4, fallback)
+
+> When the project-kickstarter plugin is installed, Phase 4 uses
+> `/project-kickstarter:bootstrap`. Framework agents are not copied into
+> the project. This file applies only to skill-only installs and other
+> IDEs.
 
 Generate the team sized to the tier. All agents are written as Claude Code
 subagents in `.claude/agents/<role>.md` (see templates/agents/), follow the
@@ -37,8 +42,11 @@ Every `.claude/agents/<role>.md` must contain:
 3. **Context to load first** — exact file paths (docs/prd.md, etc.).
 4. **Rules to obey** — pointer to the relevant `.claude/rules/*.md` files,
    plus 3–5 role-specific hard rules.
-5. **Output contract** — what it must return (e.g. reviewer returns
-   findings as severity-rated list with file:line).
+5. **Output contract**: what it must return. For example, a reviewer
+   returns a severity-rated finding list with file:line.
+6. **Blockers**: when to stop and report instead of guessing (ambiguous
+   spec, scope too small, missing dependency, a command that can't run).
+   Every final message states its status: done, blocked or failed.
 
 ## Project skills generated alongside the team
 
