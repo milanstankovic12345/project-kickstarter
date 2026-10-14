@@ -2,27 +2,116 @@
   "version": 1,
   "notes": "Edits to these paths trigger a permission prompt (ask) so a human approves them. Self-improvement and agents cannot silently change security policy, permissions, hooks or risk acceptances. This file itself is protected.",
   "ask": [
-    { "glob": "**/.env", "reason": "secret-bearing environment file" },
-    { "glob": "**/.env.*", "except": ["**/.env.example", "**/.env.sample", "**/.env.template"], "reason": "secret-bearing environment file" },
-    { "glob": "**/*.{pem,key,p12,pfx,jks,keystore}", "reason": "key or certificate material" },
-    { "glob": "**/id_{rsa,dsa,ecdsa,ed25519}", "reason": "SSH private key" },
-    { "glob": "**/project-context/risk-acceptances.md", "reason": "risk acceptance requires a named human approver" },
-    { "glob": "**/.claude/settings.json", "reason": "Claude Code permissions and hooks" },
-    { "glob": "**/.claude/settings.local.json", "reason": "Claude Code permissions and hooks" },
-    { "glob": "**/.claude/agent-framework.json", "reason": "framework configuration (enabled agents, gates, routing)" },
-    { "glob": "**/.claude/agent-framework/manifest.json", "reason": "bootstrap ownership manifest" },
-    { "glob": "**/.claude/hooks/**", "reason": "project hook scripts" },
-    { "glob": "**/hooks/hooks.json", "reason": "plugin hook registration" },
-    { "glob": "**/hooks/*.mjs", "reason": "guardrail hook scripts" },
-    { "glob": "**/config/model-routing.json", "reason": "model routing policy" },
-    { "glob": "**/config/protected-paths.json", "reason": "guardrail policy" },
-    { "glob": "**/config/agent-registry.json", "reason": "agent permissions registry" },
-    { "glob": "**/skills/security-review/**", "reason": "security policy" },
-    { "glob": "**/skills/handoff-protocol/**", "reason": "agent evidence protocol" },
-    { "glob": "**/.github/workflows/**", "reason": "CI pipeline (supply-chain and secrets exposure)" }
+    {
+      "glob": "**/.env",
+      "reason": "secret-bearing environment file"
+    },
+    {
+      "glob": "**/.env.*",
+      "except": [
+        "**/.env.example",
+        "**/.env.sample",
+        "**/.env.template"
+      ],
+      "reason": "secret-bearing environment file"
+    },
+    {
+      "glob": "**/*.{pem,key,p12,pfx,jks,keystore}",
+      "reason": "key or certificate material"
+    },
+    {
+      "glob": "**/id_{rsa,dsa,ecdsa,ed25519}",
+      "reason": "SSH private key"
+    },
+    {
+      "glob": "**/project-context/risk-acceptances.md",
+      "reason": "risk acceptance requires a named human approver"
+    },
+    {
+      "glob": "**/.claude/settings.json",
+      "reason": "Claude Code permissions and hooks"
+    },
+    {
+      "glob": "**/.claude/settings.local.json",
+      "reason": "Claude Code permissions and hooks"
+    },
+    {
+      "glob": "**/.claude/agent-framework.json",
+      "reason": "framework configuration (enabled agents, gates, routing)"
+    },
+    {
+      "glob": "**/.claude/agent-framework/manifest.json",
+      "reason": "bootstrap ownership manifest"
+    },
+    {
+      "glob": "**/.claude/hooks/**",
+      "reason": "project hook scripts"
+    },
+    {
+      "glob": "**/hooks/hooks.json",
+      "reason": "plugin hook registration"
+    },
+    {
+      "glob": "**/hooks/*.mjs",
+      "reason": "guardrail hook scripts"
+    },
+    {
+      "glob": "**/config/model-routing.json",
+      "reason": "model routing policy"
+    },
+    {
+      "glob": "**/config/protected-paths.json",
+      "reason": "guardrail policy"
+    },
+    {
+      "glob": "**/config/agent-registry.json",
+      "reason": "agent permissions registry"
+    },
+    {
+      "glob": "**/skills/security-review/**",
+      "reason": "security policy"
+    },
+    {
+      "glob": "**/skills/handoff-protocol/**",
+      "reason": "agent evidence protocol"
+    },
+    {
+      "glob": "**/.github/workflows/**",
+      "reason": "CI pipeline (supply-chain and secrets exposure)"
+    }
   ],
   "subagent_deny": [
-    { "glob": "tasks/*.md", "agents_allowed": ["planner"], "reason": "task state changes only through scripts/tasks.mjs; only the planner edits task files" },
-    { "glob": "reports/metrics/**", "agents_allowed": [], "reason": "metrics are append-only via framework scripts" }
+    {
+      "glob": "tasks/*.md",
+      "agents_allowed": [
+        "planner"
+      ],
+      "reason": "task state changes only through scripts/tasks.mjs; only the planner edits task files"
+    },
+    {
+      "glob": "reports/metrics/**",
+      "agents_allowed": [],
+      "reason": "metrics are append-only via framework scripts"
+    },
+    {
+      "glob": "reports/reviews/**",
+      "agents_allowed": [],
+      "reason": "reviews are saved only through scripts/reports.mjs, which validates them and checks reviewer independence"
+    },
+    {
+      "glob": "reports/handoffs/**",
+      "agents_allowed": [],
+      "reason": "handoffs are saved only through scripts/reports.mjs, which validates scope and evidence"
+    },
+    {
+      "glob": "reports/audits/**",
+      "agents_allowed": [],
+      "reason": "audits are saved only through scripts/reports.mjs"
+    },
+    {
+      "glob": "project-context/risk-acceptances.md",
+      "agents_allowed": [],
+      "reason": "only a human may accept risk"
+    }
   ]
 }

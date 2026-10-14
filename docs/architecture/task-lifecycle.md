@@ -45,7 +45,7 @@ stateDiagram-v2
   in_progress --> failed: --reason
   in_progress --> ready
   review --> done: handoff valid AND gate passes
-  review --> in_progress: fix loop, attempts+1 (bounded)
+  review --> in_progress: fix loop, attempts+1 (bounded), evidence archived
   review --> blocked
   review --> failed
   blocked --> ready
@@ -58,6 +58,15 @@ stateDiagram-v2
 
 Each transition, including rejected ones with their reasons, is appended to
 `reports/metrics/events.jsonl`.
+
+**Rounds.** A task can re-enter `in_progress` after a previous round, either
+from `review` or via `blocked` → `ready` once a handoff exists. That re-entry
+increments `attempts`, and is rejected once `max_retries` is exhausted. It
+also archives the round's evidence: `reports/handoffs/TASK-NNN.md` becomes
+`TASK-NNN.round-<n>.md`, and each review becomes
+`TASK-NNN-<kind>.round-<n>.md`. The next `review` and `done` therefore need
+a fresh handoff and fresh reviews. Re-reviewers read the archived files as
+the previous round.
 
 ## Parallel batches
 

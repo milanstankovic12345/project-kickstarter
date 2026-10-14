@@ -3,3 +3,18 @@
 {"ts":"2026-10-14T21:33:05.518Z","type":"transition","task":"TASK-001","from":"ready","to":"in_progress","agent":"docs-writer","attempts":0,"reason":null}
 {"ts":"2026-10-14T21:35:33.459Z","type":"handoff_saved","task":"TASK-001","status":"done_with_concerns","agent":"docs-writer"}
 {"ts":"2026-10-14T21:35:33.534Z","type":"transition","task":"TASK-001","from":"in_progress","to":"review","agent":"docs-writer","attempts":0,"reason":null}
+{"ts":"2026-10-14T21:36:44.670Z","type":"task_created","task":"TASK-002","agent":"implementer"}
+{"ts":"2026-10-14T21:36:44.899Z","type":"transition","task":"TASK-002","from":"draft","to":"ready","agent":"implementer","attempts":0,"reason":null}
+{"ts":"2026-10-14T21:36:44.995Z","type":"transition","task":"TASK-002","from":"ready","to":"in_progress","agent":"implementer","attempts":0,"reason":null}
+{"ts":"2026-10-14T21:37:00.414Z","type":"review_saved","task":"TASK-001","kind":"code","reviewer":"code-reviewer","verdict":"approve_with_notes","findings":{"critical":0,"high":0,"medium":0,"low":1,"info":1}}
+{"ts":"2026-10-14T21:37:00.568Z","type":"transition","task":"TASK-001","from":"review","to":"done","agent":"docs-writer","attempts":0,"reason":null}
+{"ts":"2026-10-14T21:43:21.137Z","type":"handoff_rejected","task":"TASK-002","errors":["scope violation: \"scripts/reports.mjs\" is outside files_allowed","scope violation: \"scripts/validate.mjs\" is outside files_allowed"]}
+{"ts":"2026-10-14T21:43:40.949Z","type":"handoff_saved","task":"TASK-002","status":"done","agent":"implementer"}
+{"ts":"2026-10-14T21:43:41.035Z","type":"transition","task":"TASK-002","from":"in_progress","to":"review","agent":"implementer","attempts":0,"reason":null}
+{"ts":"2026-10-14T21:43:56.251Z","type":"task_created","task":"TASK-003","agent":"docs-writer"}
+{"ts":"2026-10-14T21:43:56.447Z","type":"transition","task":"TASK-003","from":"draft","to":"ready","agent":"docs-writer","attempts":0,"reason":null}
+{"ts":"2026-10-14T21:44:04.528Z","type":"transition","task":"TASK-003","from":"ready","to":"in_progress","agent":"docs-writer","attempts":0,"reason":null}
+{"ts":"2026-10-14T21:45:00.975Z","type":"handoff_rejected","task":"TASK-003","errors":["scope violation: \"docs/architecture/security-model.md\" is outside files_allowed","scope violation: \"docs/architecture/task-lifecycle.md\" is outside files_allowed"]}
+{"ts":"2026-10-14T21:45:01.055Z","type":"transition_rejected","task":"TASK-003","from":"in_progress","to":"review","errors":["handoff missing: reports/handoffs/TASK-003.md"]}
+{"ts":"2026-10-14T21:45:17.624Z","type":"handoff_saved","task":"TASK-003","status":"done","agent":"docs-writer"}
+{"ts":"2026-10-14T21:45:17.695Z","type":"transition","task":"TASK-003","from":"in_progress","to":"review","agent":"docs-writer","attempts":0,"reason":null}

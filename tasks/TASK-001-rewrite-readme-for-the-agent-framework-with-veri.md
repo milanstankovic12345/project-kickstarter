@@ -1,7 +1,7 @@
 ---
 id: TASK-001
 title: Rewrite README for the agent framework with verified usage
-status: review
+status: done
 agent: docs-writer
 skills: []
 model_tier: fast

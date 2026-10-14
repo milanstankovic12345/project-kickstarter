@@ -1,5 +1,5 @@
 // Task system core: load, validate, batch, transition.
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync, renameSync } from "node:fs";
 import { basename, join } from "node:path";
 import { parseFrontmatter, setFrontmatterScalars, headings } from "./frontmatter.mjs";
 import { validate as validateSchema } from "./schema.mjs";
@@ -9,6 +9,28 @@ import { loadSchema, loadConfig, frameworkPaths, appendEvent, today, rel } from 
 import { validateHandoffForTask, handoffPath } from "./handoff.mjs";
 import { evaluateGate, requiredReviewKinds } from "./gate.mjs";
 export { requiredReviewKinds };
+
+/**
+ * Move a round's handoff and reviews aside (TASK-001.round-1.md,
+ * TASK-001-code.round-1.md) so the next round must produce fresh evidence.
+ * Reviewers of the next round read these files as the previous review.
+ */
+export function archiveEvidence(root, id, round, config = loadConfig(root)) {
+  const moved = [];
+  const paths = frameworkPaths(root, config);
+  const move = (dir, name) => {
+    const from = join(dir, name);
+    let to = join(dir, name.replace(/\.md$/, `.round-${round}.md`));
+    for (let n = 2; existsSync(to); n++) to = join(dir, name.replace(/\.md$/, `.round-${round}-${n}.md`));
+    renameSync(from, to);
+    moved.push(rel(root, to));
+  };
+  if (existsSync(join(paths.handoffs, `${id}.md`))) move(paths.handoffs, `${id}.md`);
+  if (existsSync(paths.reviews)) {
+    for (const name of readdirSync(paths.reviews)) if (new RegExp(`^${id}-[a-z]+\\.md$`).test(name)) move(paths.reviews, name);
+  }
+  return moved;
+}
 
 export const STATES = ["draft", "ready", "in_progress", "review", "done", "blocked", "failed", "cancelled"];
 export const TERMINAL = new Set(["done", "cancelled"]);
@@ -187,6 +209,7 @@ export function transition(root, id, to, { reason, humanApproved = false, config
 
   if (!(TRANSITIONS[from] ?? []).includes(to)) errors.push(`illegal transition ${from} -> ${to} (allowed: ${(TRANSITIONS[from] ?? []).join(", ") || "none, terminal state"})`);
   const updates = { status: to, updated: today() };
+  let archiveRound = 0;
 
   if (to === "ready" && taskErrors.length) errors.push(...taskErrors.map((e) => `task invalid: ${e.message}`));
   if (to === "ready" && from === "failed") {
@@ -197,11 +220,14 @@ export function transition(root, id, to, { reason, humanApproved = false, config
     if (!depsDone(task, byId)) errors.push(`dependencies not done: ${(task.data.depends_on ?? []).filter((d) => byId.get(d)?.data.status !== "done").join(", ")}`);
     const clash = tasks.find((o) => o !== task && o.data.status === "in_progress" && setsMayOverlap(task.data.files_allowed ?? ["**"], o.data.files_allowed ?? ["**"]));
     if (clash) errors.push(`file scope overlaps in_progress task ${clash.data.id}; wait or narrow scopes`);
-    if (from === "review") {
+    // Any re-entry after a previous round (fix loop, or blocked/ready detours
+    // that already produced a handoff) consumes retry budget and archives the
+    // previous round's evidence so it cannot satisfy the gate again.
+    if (from === "review" || existsSync(handoffPath(root, id, config))) {
       const next = (task.data.attempts ?? 0) + 1;
       if (next > (task.data.max_retries ?? config.retries.default_max)) {
         errors.push(`retry budget exhausted (${task.data.attempts}/${task.data.max_retries}); transition to failed and escalate to a human`);
-      } else updates.attempts = next;
+      } else { updates.attempts = next; archiveRound = next; }
     }
   }
   if (to === "blocked" || to === "failed") {
@@ -225,6 +251,7 @@ export function transition(root, id, to, { reason, humanApproved = false, config
     return { ok: false, errors, from, to };
   }
   if (!dryRun) {
+    if (archiveRound) archiveEvidence(root, id, archiveRound, config);
     writeFileSync(task.file, setFrontmatterScalars(task.text, updates));
     appendEvent(root, { type: "transition", task: id, from, to, agent: task.data.agent, attempts: updates.attempts ?? task.data.attempts ?? 0, reason: reason ?? null }, config);
   }

@@ -5,7 +5,9 @@
 // from task-state files. Opt-in via .claude/agent-framework.json.
 import { relative, resolve, isAbsolute } from "node:path";
 import { readInput, frameworkRoot, agentAccess, shortAgent, READ_ONLY_ACCESS, emitPreToolUse } from "./lib/common.mjs";
-import { matchesAny } from "../scripts/lib/glob.mjs";
+import { matchesAny as matchGlob, CASE_INSENSITIVE_FS } from "../scripts/lib/glob.mjs";
+// Policy matching follows the file system: case-insensitive on Windows/macOS.
+const matchesAny = (p, globs) => matchGlob(p, globs, { nocase: CASE_INSENSITIVE_FS });
 import { readJson, pluginFile, loadConfig } from "../scripts/lib/project.mjs";
 import { loadTasks } from "../scripts/lib/tasks.mjs";
 

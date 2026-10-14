@@ -238,6 +238,16 @@ function walkMd(dir) {
   return out;
 }
 
+// ---- stray control characters in code (e.g. "\b" turned into a backspace) ---
+for (const dir of ["scripts", "scripts/lib", "hooks", "hooks/lib", "tests", "tests/unit", "tests/integration"]) {
+  for (const n of readdirSync(join(R, dir)).filter((f) => f.endsWith(".mjs"))) {
+    const text = readFileSync(join(R, dir, n), "utf8");
+    // eslint-disable-next-line no-control-regex
+    const bad = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFEFF]/.exec(text);
+    if (bad) err(`${dir}/${n}`, `contains control character U+${bad[0].charCodeAt(0).toString(16).padStart(4, "0").toUpperCase()} at offset ${bad.index}; use an escape sequence`);
+  }
+}
+
 // ---- this repo's own (dogfood) tasks ----------------------------------------
 if (existsSync(join(R, "tasks"))) {
   const t = validateTaskSet(R, {});

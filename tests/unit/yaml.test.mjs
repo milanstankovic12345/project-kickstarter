@@ -85,7 +85,8 @@ test("frontmatter parse, in-place scalar update, headings", () => {
   assert.equal(re.data.status, "in_progress");
   assert.equal(re.data.attempts, 1);
   assert.deepEqual(re.data.list, ["a"]);
-  assert.match(updated, /## Objective\nx\n/);
+  assert.match(updated, /## Objective\r\nx\r\n/, "CRLF files keep CRLF line endings");
+  assert.equal(parseFrontmatter(setFrontmatterScalars("\uFEFF---\nstatus: a\n---\nbody\n", { status: "b" })).data.status, "b", "F8: BOM-prefixed files can be updated");
   assert.throws(() => setFrontmatterScalars(text, { list: "x" }), /not a scalar/);
 });
 

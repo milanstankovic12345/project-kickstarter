@@ -1,12 +1,22 @@
 // Glob helpers. Paths are always compared in POSIX form, relative to the
 // project root.
+import { posix } from "node:path";
 
+/** POSIX separators, normalised ("a/./b/../c" -> "a/c"), no leading "./". May keep leading "../". */
 export function toPosix(p) {
-  return String(p).replace(/\\/g, "/").replace(/^\.\//, "");
+  const s = String(p).replace(/\\/g, "/");
+  if (s === "") return s;
+  const n = posix.normalize(s).replace(/^\.\//, "");
+  return n === "." ? "" : n;
 }
 
-export function globToRegExp(glob) {
-  const g = toPosix(glob);
+/** True when a (normalised) relative path escapes its root or is absolute. */
+export function escapesRoot(p) {
+  const n = toPosix(p);
+  return n === ".." || n.startsWith("../") || n.startsWith("/") || /^[a-zA-Z]:/.test(n);
+}
+
+function globBody(g) {
   let re = "";
   for (let i = 0; i < g.length; i++) {
     const c = g[i];
@@ -20,20 +30,28 @@ export function globToRegExp(glob) {
     else if (c === "{") {
       const end = g.indexOf("}", i);
       if (end === -1) { re += "\\{"; continue; }
-      re += "(?:" + g.slice(i + 1, end).split(",").map((s) => s.replace(/[.+^$()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*")).join("|") + ")";
+      re += "(?:" + g.slice(i + 1, end).split(",").map(globBody).join("|") + ")";
       i = end;
     } else re += c.replace(/[.+^$()|[\]\\]/g, "\\$&");
   }
-  return new RegExp(`^${re}$`);
+  return re;
 }
 
-export function matchesAny(path, globs = []) {
+export function globToRegExp(glob, { nocase = false } = {}) {
+  return new RegExp(`^${globBody(String(glob).replace(/\\/g, "/").replace(/^\.\//, ""))}$`, nocase ? "i" : "");
+}
+
+/** Case-insensitive file systems (Windows, macOS) need case-insensitive policy matching. */
+export const CASE_INSENSITIVE_FS = process.platform === "win32" || process.platform === "darwin";
+
+export function matchesAny(path, globs = [], { nocase = false } = {}) {
   const p = toPosix(path);
+  const eq = (a, b) => (nocase ? a.toLowerCase() === b.toLowerCase() : a === b);
   return globs.some((g) => {
-    const pg = toPosix(g);
-    if (pg === p) return true;
-    if (pg.endsWith("/") && p.startsWith(pg)) return true;
-    return globToRegExp(pg).test(p);
+    const pg = String(g).replace(/\\/g, "/").replace(/^\.\//, "");
+    if (eq(pg, p)) return true;
+    if (pg.endsWith("/") && (nocase ? p.toLowerCase().startsWith(pg.toLowerCase()) : p.startsWith(pg))) return true;
+    return globToRegExp(pg, { nocase }).test(p);
   });
 }
 

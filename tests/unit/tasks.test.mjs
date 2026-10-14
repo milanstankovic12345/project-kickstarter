@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { tempProject, cleanup, writeTask, write, handoffDoc, reviewDoc, BODY } from "../helpers.mjs";
 import { validateTaskSet, computeBatches, transition, nextTaskId, loadTasks } from "../../scripts/lib/tasks.mjs";
@@ -113,6 +113,10 @@ test("review requires valid handoff; done requires gate; fix loop is bounded", (
   assert.match(transition(root, "TASK-001", "done").errors.join(), /required code review missing/);
   // fix loop: one retry allowed
   assert.equal(transition(root, "TASK-001", "in_progress").ok, true);
+  // F7: the previous round's handoff is archived; the next review needs fresh evidence
+  assert.ok(existsSync(join(root, "reports/handoffs/TASK-001.round-1.md")));
+  assert.match(transition(root, "TASK-001", "review").errors.join(), /handoff missing/);
+  write(root, "reports/handoffs/TASK-001.md", handoffDoc());
   assert.equal(transition(root, "TASK-001", "review").ok, true);
   assert.match(transition(root, "TASK-001", "in_progress").errors.join(), /retry budget exhausted/);
   assert.equal(transition(root, "TASK-001", "failed", { reason: "could not fix" }).ok, true);

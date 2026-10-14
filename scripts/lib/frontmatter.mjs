@@ -4,7 +4,7 @@ import { parseYaml, stringifyYaml, YamlError } from "./yaml.mjs";
 const FM_RE = /^---[ \t]*\n([\s\S]*?)\n---[ \t]*(?:\n|$)/;
 
 export function splitFrontmatter(text) {
-  const normalized = text.replace(/^﻿/, "").replace(/\r\n?/g, "\n");
+  const normalized = text.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
   const m = FM_RE.exec(normalized);
   if (!m) return { hasFrontmatter: false, yaml: "", body: normalized };
   return { hasFrontmatter: true, yaml: m[1], body: normalized.slice(m[0].length) };
@@ -28,11 +28,12 @@ export function serializeFrontmatter(data, body) {
 
 /**
  * Replace (or add) top-level scalar keys in the frontmatter while preserving
- * the rest of the file byte-for-byte. Used for state transitions so user
- * formatting in the task body is never rewritten.
+ * the rest of the file (content and line-ending style; a UTF-8 BOM is
+ * dropped). Used for state transitions so the task body is never rewritten.
  */
 export function setFrontmatterScalars(text, updates) {
-  const normalized = text.replace(/\r\n?/g, "\n");
+  const crlf = /\r\n/.test(text);
+  const normalized = text.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
   const m = FM_RE.exec(normalized);
   if (!m) throw new YamlError("File has no frontmatter");
   let yaml = m[1];
@@ -52,7 +53,8 @@ export function setFrontmatterScalars(text, updates) {
       yaml = `${yaml}\n${rendered}`;
     }
   }
-  return `---\n${yaml}\n---\n${normalized.slice(m[0].length)}`;
+  const out = `---\n${yaml}\n---\n${normalized.slice(m[0].length)}`;
+  return crlf ? out.replace(/\n/g, "\r\n") : out; // preserve the file's line-ending style
 }
 
 /** Extract level-2 heading titles from a markdown body. */

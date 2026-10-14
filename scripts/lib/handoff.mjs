@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseFrontmatter } from "./frontmatter.mjs";
 import { validate as validateSchema } from "./schema.mjs";
-import { matchesAny, toPosix } from "./glob.mjs";
+import { matchesAny, toPosix, escapesRoot } from "./glob.mjs";
 import { loadSchema, loadConfig, frameworkPaths } from "./project.mjs";
 
 export function handoffPath(root, id, config = loadConfig(root)) {
@@ -49,6 +49,7 @@ export function validateHandoffForTask(root, task, { config = loadConfig(root), 
   const excluded = task.data.files_excluded ?? [];
   for (const f of h.files_modified ?? []) {
     const p = toPosix(f);
+    if (escapesRoot(f)) { result.errors.push(`scope violation: "${f}" escapes the project root`); continue; }
     if (!matchesAny(p, allowed)) result.errors.push(`scope violation: "${p}" is outside files_allowed`);
     else if (matchesAny(p, excluded)) result.errors.push(`scope violation: "${p}" matches files_excluded`);
   }

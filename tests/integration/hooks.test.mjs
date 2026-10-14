@@ -72,7 +72,9 @@ test("guard-paths: secrets/policy ask; subagents confined to project, scope and 
   writeTask(root, { id: "TASK-001", status: "in_progress", files_allowed: ["src/a/**"] });
   assert.equal(w("src/a/x.ts", "implementer"), "allow");
   assert.equal(w("src/b/y.ts", "implementer"), "ask");
-  assert.equal(w("reports/handoffs/TASK-001.md", "implementer"), "allow");
+  assert.equal(w("reports/handoffs/TASK-001.md", "implementer"), "deny", "handoffs only via validated reports.mjs");
+  assert.equal(w("reports/reviews/TASK-001-code.md", "implementer"), "deny", "F1: no review forgery via Write");
+  assert.equal(w("project-context/risk-acceptances.md", "implementer"), "deny", "F1: agents cannot accept risk");
 });
 
 test("validate-artifact: feeds task/handoff errors back after a write", (t) => {

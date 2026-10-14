@@ -9,7 +9,7 @@ export const PROJECT_CONFIG_REL = ".claude/agent-framework.json";
 export const MANIFEST_REL = ".claude/agent-framework/manifest.json";
 
 export function readJson(path) {
-  const raw = readFileSync(path, "utf8").replace(/^﻿/, "");
+  const raw = readFileSync(path, "utf8").replace(/^\uFEFF/, "");
   try {
     return JSON.parse(raw);
   } catch (e) {

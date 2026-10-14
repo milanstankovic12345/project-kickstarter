@@ -79,7 +79,7 @@ Brief (paths only, never pasted history or file contents):
 ```
 Task file: tasks/TASK-007-<slug>.md
 Project profile: project-context/project-profile.md
-Attempt: <attempts from task>   Previous review(s): <paths or "none">
+Attempt: <attempts from task>   Previous review(s): <reports/reviews/TASK-007-<kind>.round-<n>.md or "none">
 Base commit: <sha>
 Plugin root: <plugin-root>   (use this absolute path in every framework command)
 Protocol: read <plugin-root>/skills/handoff-protocol/SKILL.md first.
@@ -115,7 +115,7 @@ Review kind: <kind>   Task file: tasks/TASK-007-<slug>.md
 Implementation handoff (claims to verify, not facts): reports/handoffs/TASK-007.md
 Diff: git diff <base-sha> -- <files_modified from handoff>
 Save via: node "<plugin-root>/scripts/reports.mjs" save review TASK-007 <kind>
-Round: <n>   Previous review (if re-review): reports/reviews/TASK-007-<kind>.md
+Round: <n>   Previous review (if re-review): reports/reviews/TASK-007-<kind>.round-<n-1>.md
 ```
 
 4. Reviewers never fix code. Implementers never review their own task:
@@ -133,7 +133,10 @@ Run `gate.mjs check <ID>`.
      retry budget is exhausted the transition is rejected; then run
      `transition <ID> failed --reason "retry budget exhausted: <top findings>"`
      and escalate to the human.
-  2. Re-dispatch the implementer with the review file paths. On later
+  2. Re-dispatch the implementer with the review file paths. The
+     transition archived the previous handoff and reviews as
+     `*.round-<n>.md`. Pass those paths, because the current-round files
+     no longer exist. On later
      attempts `routing.mjs resolve --task` escalates the model
      automatically.
   3. When the new handoff is valid, `transition <ID> review` and dispatch

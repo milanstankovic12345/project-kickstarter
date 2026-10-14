@@ -33,7 +33,11 @@ test("validator detects injected misconfigurations", (t) => {
     return JSON.stringify(m, null, 2);
   });
   edit(dir, "skills/project-kickstarter/templates/hooks/guard-bash.mjs", (s) => s + "\n// drift\n");
-  edit(dir, "config/protected-paths.json", (s) => s.replace('{ "glob": "**/config/model-routing.json", "reason": "model routing policy" },', ""));
+  edit(dir, "config/protected-paths.json", (s) => {
+    const m = JSON.parse(s);
+    m.ask = m.ask.filter((r) => r.glob !== "**/config/model-routing.json");
+    return JSON.stringify(m, null, 2);
+  });
   edit(dir, "commands/review.md", (s) => s + "\nUse project-kickstarter:nonexistent-skill.\n");
   const r = validate(dir);
   assert.equal(r.code, 1);

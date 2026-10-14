@@ -7,6 +7,12 @@ import { validate as validateSchema } from "./schema.mjs";
 import { loadSchema, loadConfig, frameworkPaths } from "./project.mjs";
 import { matchesAny, staticPrefix } from "./glob.mjs";
 
+/** Agent identity ignoring plugin namespace, case and whitespace ("pk:Backend-Dev" == "backend-dev"). */
+export function sameAgent(a, b) {
+  const n = (x) => String(x ?? "").split(":").pop().trim().toLowerCase();
+  return n(a) !== "" && n(a) === n(b);
+}
+
 export function reviewPath(root, id, kind, config = loadConfig(root)) {
   return join(frameworkPaths(root, config).reviews, `${id}-${kind}.md`);
 }
@@ -48,7 +54,7 @@ function acceptanceProblem(ra, taskId, findingId, todayStr) {
   if (!ra) return "acceptance_ref not found in risk acceptances";
   if (ra.task !== taskId) return `acceptance is for ${ra.task}, not ${taskId}`;
   if (ra.finding !== findingId) return `acceptance is for finding ${ra.finding}, not ${findingId}`;
-  if (!ra.approved_by || /agent|claude|bot|automated/i.test(ra.approved_by)) return "acceptance must be approved_by a named human";
+  if (!ra.approved_by || /\b(agent|claude|bot|automated|ai|assistant|llm)\b/i.test(ra.approved_by) || /^[a-z0-9]+(-[a-z0-9]+)+$/.test(ra.approved_by.trim())) return "acceptance must be approved_by a named human";
   if (!ra.rationale) return "acceptance needs a rationale";
   if (ra.expires && ra.expires < todayStr) return `acceptance expired on ${ra.expires}`;
   return null;
@@ -88,7 +94,7 @@ export function evaluateGate(root, task, { config = loadConfig(root), requiredKi
     }
     if (r.task !== id) reasons.push(`${kind} review is for ${r.task}, not ${id}`);
     if (r.kind !== kind) reasons.push(`${kind} review file declares kind "${r.kind}"`);
-    if (r.reviewer === task.data.agent) reasons.push(`${kind} review was performed by the implementing agent (${r.reviewer}); reviews must be independent`);
+    if (sameAgent(r.reviewer, task.data.agent)) reasons.push(`${kind} review was performed by the implementing agent (${r.reviewer}); reviews must be independent`);
     let blocking = 0;
     for (const f of r.findings) {
       if (!blockSev.has(f.severity)) continue;

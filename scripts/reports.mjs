@@ -14,7 +14,7 @@ import { dirname, join } from "node:path";
 import { parseArgs, findProjectRoot, loadConfig, frameworkPaths, loadSchema, rel, appendEvent, today } from "./lib/project.mjs";
 import { loadTasks } from "./lib/tasks.mjs";
 import { validateHandoffForTask, handoffPath } from "./lib/handoff.mjs";
-import { reviewPath } from "./lib/gate.mjs";
+import { reviewPath, sameAgent } from "./lib/gate.mjs";
 import { parseFrontmatter } from "./lib/frontmatter.mjs";
 import { validate as validateSchema } from "./lib/schema.mjs";
 
@@ -46,7 +46,7 @@ function validateReviewText(text, task, kindName) {
   errors.push(...validateSchema(loadSchema("review"), parsed.data).map((e) => `schema ${e}`));
   if (parsed.data.task !== task.data.id) errors.push(`review task "${parsed.data.task}" does not match ${task.data.id}`);
   if (parsed.data.kind !== kindName) errors.push(`review kind "${parsed.data.kind}" does not match ${kindName}`);
-  if (parsed.data.reviewer === task.data.agent) errors.push(`reviewer "${parsed.data.reviewer}" implemented this task; reviews must be independent`);
+  if (sameAgent(parsed.data.reviewer, task.data.agent)) errors.push(`reviewer "${parsed.data.reviewer}" implemented this task; reviews must be independent`);
   const ids = (parsed.data.findings ?? []).map((f) => f.id);
   if (new Set(ids).size !== ids.length) errors.push("finding ids must be unique");
   return errors;

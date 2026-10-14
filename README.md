@@ -16,11 +16,14 @@ A Claude Code plugin with two layers:
    - evidence-based self-improvement.
 
 Deterministic logic (task state, gates, routing, discovery, bootstrap,
-validation) lives in zero-dependency Node scripts with 64 automated tests.
+validation) lives in zero-dependency Node scripts with 75 automated tests.
 Agents and skills contain only the judgment.
 
-> **Verification status.** Every script command in this README was run
-> while writing it. Plugin slash commands and live agent dispatch
+> **Verification status.** Every `node scripts/*.mjs`, `npm test` and
+> `claude plugin validate` command in this README was run while writing
+> it. Commands marked "not re-verified" or "not executed" were not run:
+> install and update commands, and the v0.1 per-IDE instructions.
+> Plugin slash commands and live agent dispatch
 > (`/project-kickstarter:*` inside Claude Code) were **not executed**: by
 > decision, no paid live evals were run. See
 > [Known limitations](#known-limitations-and-unverified-behaviour).
@@ -43,6 +46,7 @@ Agents and skills contain only the judgment.
 - [Troubleshooting](#troubleshooting)
 - [Known limitations and unverified behaviour](#known-limitations-and-unverified-behaviour)
 - [Kickstarter interview and other IDEs](#kickstarter-interview-and-other-ides)
+- [Updating](#updating)
 
 ## Architecture
 
@@ -363,7 +367,7 @@ containing `.claude/agent-framework.json` or `.git`. Most also accept
 ## Developing this plugin
 
 ```bash
-npm test                                  # = node scripts/run-tests.mjs  → 64 tests, 0 failures
+npm test                                  # = node scripts/run-tests.mjs  → 75 tests, 0 failures
 node scripts/validate.mjs                 # OK: 24 agents, 12 skills, 8 commands checked; 0 error(s), 0 warning(s)
 node scripts/routing.mjs check            # OK: routing consistent
 node scripts/sync-hook-template.mjs --check
@@ -476,7 +480,9 @@ Universal one-liner (requires Node.js; not re-verified):
 npx skills add milanstankovic12345/project-kickstarter
 ```
 
-Manual copy for Claude Code (skill only, without the framework):
+### 1. Claude Code (skill only, without the framework)
+
+Manual copy:
 
 ```bash
 git clone https://github.com/milanstankovic12345/project-kickstarter.git
