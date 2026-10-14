@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "files": {
+    ".claude/agent-framework.json": {
+      "hash": "7dfe3ab7f5c105cf",
+      "kind": "config",
+      "section": false
+    },
+    "README.md": {
+      "hash": "c60f041999daeac8",
+      "kind": "readme",
+      "section": true
+    },
+    "project-context/project-profile.md": {
+      "hash": "d1b063a47d54252e",
+      "kind": "profile",
+      "section": false
+    }
+  },
+  "generator": "project-kickstarter bootstrap 0.2.0"
+}

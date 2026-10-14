@@ -175,7 +175,7 @@ export function discover(root) {
     if (pf === "package.json") {
       const s = pkg.scripts ?? {};
       const run = (name) => (pmFromLock === "npm" || !pmFromLock ? (name === "test" ? "npm test" : `npm run ${name}`) : `${pmFromLock} ${name === "test" ? "test" : "run " + name}`);
-      for (const [key, names] of Object.entries({ dev: ["dev", "start:dev", "serve"], start: ["start"], build: ["build"], test: ["test"], lint: ["lint"], typecheck: ["typecheck", "type-check", "tsc", "check-types"], format: ["format", "fmt"], e2e: ["e2e", "test:e2e"] })) {
+      for (const [key, names] of Object.entries({ dev: ["dev", "start:dev", "serve"], start: ["start"], build: ["build"], test: ["test"], lint: ["lint"], typecheck: ["typecheck", "type-check", "tsc", "check-types"], format: ["format", "fmt"], e2e: ["e2e", "test:e2e"], check: ["check", "validate", "verify"] })) {
         const n = names.find((x) => s[x] && !/no test specified/.test(s[x]));
         if (n) result.commands[key] = { cmd: run(n), evidence: `package.json scripts.${n}` };
       }

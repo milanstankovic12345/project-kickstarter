@@ -119,7 +119,7 @@ export function mapCapabilities(d, inv) {
 // --------------------------------------------------------- content builders
 function validationCommands(d) {
   const out = {};
-  for (const k of ["install", "build", "test", "lint", "typecheck", "e2e"]) if (d.commands[k]) out[k] = d.commands[k].cmd;
+  for (const k of ["install", "build", "test", "lint", "typecheck", "check", "e2e"]) if (d.commands[k]) out[k] = d.commands[k].cmd;
   return out;
 }
 

@@ -1,0 +1,5 @@
+{"ts":"2026-10-14T21:32:51.285Z","type":"task_created","task":"TASK-001","agent":"docs-writer"}
+{"ts":"2026-10-14T21:33:05.443Z","type":"transition","task":"TASK-001","from":"draft","to":"ready","agent":"docs-writer","attempts":0,"reason":null}
+{"ts":"2026-10-14T21:33:05.518Z","type":"transition","task":"TASK-001","from":"ready","to":"in_progress","agent":"docs-writer","attempts":0,"reason":null}
+{"ts":"2026-10-14T21:35:33.459Z","type":"handoff_saved","task":"TASK-001","status":"done_with_concerns","agent":"docs-writer"}
+{"ts":"2026-10-14T21:35:33.534Z","type":"transition","task":"TASK-001","from":"in_progress","to":"review","agent":"docs-writer","attempts":0,"reason":null}
