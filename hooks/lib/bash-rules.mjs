@@ -66,8 +66,8 @@ export const WRITES = [
   [REDIRECT, "output redirection to a file"],
   [/^sed\b.*\s(-[a-zA-Z]*i[a-zA-Z]*|--in-place)(\s|=|$)|^perl\b.*\s-[a-zA-Z]*i/, "in-place edit"],
   [/^tee\b(?!\s+\/dev\/null)/, "tee to file"],
-  [/^(mv|cp|rm|rmdir|mkdir|touch|ln|truncate|install|chmod|chown|unlink|shred|rsync)\b/, "file system modification"],
-  [/^find\b.*\s(-delete\b|-exec(dir)?\s+(rm|mv|cp|sed|chmod|chown)\b)/, "find with delete/exec"],
+  [/^(\S*\/)?(mv|cp|rm|rmdir|mkdir|touch|ln|truncate|install|chmod|chown|unlink|shred|rsync)\b/, "file system modification"],
+  [/^find\b.*\s(-delete\b|-(exec|execdir|ok)\s+(\S*\/)?(rm|mv|cp|sed|chmod|chown|unlink|shred)\b)/, "find with delete/exec"],
   [/^(Set-Content|Add-Content|Out-File|New-Item|Remove-Item|Move-Item|Copy-Item|Rename-Item)\b/i, "file system modification"],
   [/^git\s+(commit|add|rm|mv|checkout|switch|restore|reset|rebase|merge|cherry-pick|apply|am|push|pull|fetch|init|clone|clean|revert)(\s|$)/, "git state change"],
   [/^git\s+stash(\s+(push|pop|apply|drop|clear|save|branch)\b|\s*$|\s+-)/, "git stash"],
@@ -78,7 +78,10 @@ export const WRITES = [
 ];
 
 // Interpreter one-liners: the code is inside quotes, so test the raw segment.
-const INTERPRETER = /^(node|deno|bun)\s+(-e|--eval|-p|--print)\b|^python[0-9.]*\s+-c\b|^(perl|ruby)\s+-e\b|^(pwsh|powershell)(\.exe)?\s+.*-(c|Command)\b/i;
+const INTERPRETER = /^(node|deno|bun)\b(?=.*\s(-e|--eval|-p|--print)(\s|=|$))|^python[0-9.]*\b(?=.*\s-c(\s|$))|^(perl|ruby)\b(?=.*\s-e(\s|$))|^(pwsh|powershell)(\.exe)?\s+.*-(c|Command)\b/i;
+// Commands that execute a heredoc body as code.
+const SHELL_CMD = /^(ba|z|da|k)?sh\b/;
+const INTERPRETER_CMD = /^(node|deno|bun|python[0-9.]*|ruby|perl|pwsh|powershell)\b/i;
 const INTERPRETER_WRITE = /\b(writeFile(Sync)?|appendFile(Sync)?|rmSync|rmdirSync|unlink(Sync)?|rename(Sync)?|mkdirSync|copyFile(Sync)?|createWriteStream|truncate(Sync)?|write_text|write_bytes|os\.remove|os\.unlink|os\.rename|shutil\.(rmtree|move|copy\w*)|Set-Content|Out-File|Remove-Item)\b|\bopen\s*\([^)]*,\s*\\?["'][wax+]/;
 
 // Framework state that subagents must never write through the shell.
@@ -87,6 +90,40 @@ export const PROTECTED_TARGET = /(^|[\s"'\/\\=>(])(tasks[\/\\]TASK-\d+[^\s"']*\.
 /** Heredoc bodies are data (e.g. review text quoting "rm -rf"), not commands. The opener line's tail is kept. */
 export function stripHeredocs(command) {
   return String(command ?? "").replace(/<<-?\s*(['"]?)([A-Za-z_][\w-]*)\1([^\n]*)\n[\s\S]*?\n\s*\2\s*(?=\n|$)/g, "<<HEREDOC$3");
+}
+
+/** Heredocs with the command that consumes them: [{ cmd, body }]. */
+export function heredocs(command) {
+  const out = [];
+  const re = /(^|\n)([^\n]*?)<<-?\s*(['"]?)([A-Za-z_][\w-]*)\3[^\n]*\n([\s\S]*?)\n\s*\4\s*(?=\n|$)/g;
+  for (const m of String(command ?? "").matchAll(re)) {
+    const segs = segments(m[2]);
+    out.push({ cmd: normalizeSegment(segs[segs.length - 1] ?? ""), body: m[5] });
+  }
+  return out;
+}
+
+/** Tokens of a segment with quotes and parentheses removed (for position-independent checks). */
+function looseTokens(seg) {
+  return seg.replace(/["'()]/g, " ").split(/\s+/).filter(Boolean);
+}
+
+/** Search-tool arguments that are files (pattern arguments removed). */
+function searchFileArgs(seg) {
+  const m = /^(git\s+grep|grep|egrep|fgrep|rg|ag|ack|findstr|Select-String)\b(.*)$/i.exec(seg);
+  if (!m) return null;
+  const toks = m[2].match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
+  const files = [];
+  let patternSeen = false;
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
+    if (t === "--") continue;
+    if (/^-(e|f|-regexp|-file|g|-glob|t|-type|A|B|C|m)$/.test(t)) { if (/^-(e|-regexp)$/.test(t)) patternSeen = true; i++; continue; }
+    if (t.startsWith("-")) continue;
+    if (!patternSeen) { patternSeen = true; continue; }
+    files.push(t);
+  }
+  return " " + files.join(" ");
 }
 
 /** Replace the contents of quoted spans with spaces (keeps length/positions). */
@@ -113,14 +150,14 @@ export function segments(command) {
   return out.filter(Boolean);
 }
 
-const LEADING = /^(\(|\{|!|then|do|else|elif|if|while|until|sudo|command|exec|nohup|time|nice|env(\s+-\S+)*|xargs(\s+-[a-zA-Z]+(\s+\S+)?)*|\w+=("[^"]*"|'[^']*'|\S*))\s+/;
-const GIT_GLOBAL = /^git\s+((-C|-c|--git-dir|--work-tree|--namespace)(\s+|=)("[^"]*"|'[^']*'|\S+)\s+|(--no-pager|--paginate|-p|--bare|--no-replace-objects|--literal-pathspecs)\s+)+/;
+const LEADING = /^(\{|!|then|do|else|elif|if|while|until|sudo|command|exec|nohup|time|nice|npx|env(\s+-\S+)*|xargs(\s+(-[nILPsdE]\s+\S+|-\S+|--\S+))*|\w+=("[^"]*"|'[^']*'|\S*))\s+/;
+const GIT_GLOBAL = /^git\s+((-C|-c|--git-dir|--work-tree|--namespace)(\s+|=)("[^"]*"|'[^']*'|\S+)\s+|(--no-pager|--paginate|-p|-P|--bare|--no-replace-objects|--literal-pathspecs)\s+)+/;
 
 /** Normalise one segment: drop trailing comment, shell keywords/wrappers, env assignments, git global options. */
 export function normalizeSegment(seg) {
   const blank = blankQuotes(seg);
   const hash = blank.search(/(^|\s)#/);
-  let s = (hash === -1 ? seg : seg.slice(0, hash)).trim();
+  let s = (hash === -1 ? seg : seg.slice(0, hash)).trim().replace(/^\(+\s*/, "").replace(/\s*\)+$/, "");
   for (let prev = null; prev !== s;) { prev = s; s = s.replace(LEADING, "").trim(); }
   s = s.replace(/^(if|then|do|else|fi|done|\}|\))$/, "");
   s = s.replace(GIT_GLOBAL, "git ");
@@ -169,39 +206,64 @@ function frameworkCall(seg) {
  *  opts.access          registry access level of the agent (orchestrate/plan may run lifecycle transitions)
  */
 export function classify(command, { readOnly = false, subagent = false, canSaveReviews = true, access = null } = {}, depth = 0) {
+  const opts = { readOnly, subagent, canSaveReviews, access };
+  let pending = null; // first "ask"; returned only if nothing denies
+  const ask = (reason) => { pending ??= { decision: "ask", reason }; };
+  // Heredoc bodies fed to a shell or interpreter are code, not data.
+  for (const h of heredocs(command)) {
+    if (SHELL_CMD.test(h.cmd) && depth < 3) {
+      const inner = classify(h.body, opts, depth + 1);
+      if (inner.decision === "deny") return inner;
+      if (inner.decision === "ask") ask(inner.reason);
+    } else if (INTERPRETER_CMD.test(h.cmd) && INTERPRETER_WRITE.test(h.body)) {
+      if (subagent && PROTECTED_TARGET.test(h.body)) return { decision: "deny", reason: "subagent may not modify framework state through an interpreter heredoc" };
+      if (readOnly) return { decision: "deny", reason: "read-only agent: interpreter heredoc writes files" };
+    }
+  }
   const cmd = stripHeredocs(command);
   for (const [re, why] of DENY) if (re.test(cmd)) return { decision: "deny", reason: why };
-  for (const [re, why] of ASK) if (re.test(cmd)) return { decision: "ask", reason: why };
+  for (const [re, why] of ASK) if (re.test(cmd)) { ask(why); break; }
   for (const raw of segments(cmd)) {
+    // Position-independent default deny (flags, wrappers, subshells, quoting).
+    if (subagent) {
+      const toks = looseTokens(raw);
+      const base = toks.map((t) => t.split(/[\/\\]/).pop());
+      const ri = base.indexOf("reports.mjs");
+      if (ri !== -1 && !canSaveReviews) {
+        const rest = toks.slice(ri + 1);
+        if (rest.includes("save") && (rest.includes("review") || rest.includes("audit"))) return { decision: "deny", reason: "only reviewer/auditor agents may save reviews or audits" };
+      }
+      const ti = base.indexOf("tasks.mjs");
+      if (ti !== -1 && toks.slice(ti + 1).includes("transition") && !["orchestrate", "plan"].includes(access)) {
+        return { decision: "deny", reason: "task lifecycle transitions are run by the orchestrator, not by worker agents" };
+      }
+    }
     const seg = normalizeSegment(raw);
     if (!seg) continue;
     // Recurse into `sh -c "<body>"`-style wrappers.
-    const wrapped = /^(ba|z|da|k)?sh\s+(-[a-zA-Z]+\s+)*-c\s+(["'])([\s\S]*)\3\s*$/.exec(seg);
+    const wrapped = /^(ba|z|da|k)?sh\s+(-[a-zA-Z]+\s+)*-[a-zA-Z]*c\s+(["'])([\s\S]*)\3\s*$/.exec(seg);
     if (wrapped && depth < 3) {
-      const inner = classify(wrapped[4], { readOnly, subagent, canSaveReviews, access }, depth + 1);
-      if (inner.decision !== "allow") return inner;
+      const inner = classify(wrapped[4], opts, depth + 1);
+      if (inner.decision === "deny") return inner;
+      if (inner.decision === "ask") ask(inner.reason);
       continue;
     }
     const blank = blankQuotes(seg);
     const call = frameworkCall(seg);
-    if (subagent && call?.script === "reports.mjs" && call.pos[0] === "save" && /^(review|audit)$/.test(call.pos[1] ?? "") && !canSaveReviews) {
-      return { decision: "deny", reason: "only reviewer/auditor agents may save reviews or audits" };
-    }
-    if (subagent && call?.script === "tasks.mjs" && call.pos[0] === "transition" && !["orchestrate", "plan"].includes(access)) {
-      return { decision: "deny", reason: "task lifecycle transitions are run by the orchestrator, not by worker agents" };
-    }
     const withoutMessages = seg.replace(MESSAGE_ARGS, "$1MSG");
-    if (!SECRET_CHECK_OK.test(seg) && SECRET_FILE.test(withoutMessages)) return { decision: "ask", reason: "command references a secret-bearing file" };
-    if (ENV_DUMP.test(seg)) return { decision: "ask", reason: "dumping environment variables (may contain secrets)" };
+    const secretSubject = searchFileArgs(seg) ?? withoutMessages;
+    if (!SECRET_CHECK_OK.test(seg) && SECRET_FILE.test(secretSubject)) ask("command references a secret-bearing file");
+    if (ENV_DUMP.test(seg)) ask("dumping environment variables (may contain secrets)");
     if (INTERPRETER.test(seg)) {
-      if (subagent && PROTECTED_TARGET.test(seg)) return { decision: "deny", reason: "subagent may not modify framework state through an interpreter one-liner" };
+      if (subagent && INTERPRETER_WRITE.test(seg) && PROTECTED_TARGET.test(seg)) return { decision: "deny", reason: "subagent may not modify framework state through an interpreter one-liner" };
       if (readOnly && INTERPRETER_WRITE.test(seg)) return { decision: "deny", reason: "read-only agent: interpreter one-liner writes files" };
     }
     const writes = WRITES.find(([re]) => re.test(blank));
     const safe = Boolean(call) && !REDIRECT.test(blank);
-    if (writes && !safe && subagent && PROTECTED_TARGET.test(seg)) return { decision: "deny", reason: `subagent may not modify framework state through the shell (${writes[1]})` };
-    if (writes && !safe && !subagent && /risk-acceptances\.md/i.test(seg)) return { decision: "ask", reason: "risk acceptances require human approval" };
+    const contentNeutral = /^git\s+(add|commit)\b/.test(seg);
+    if (writes && !safe && subagent && !contentNeutral && PROTECTED_TARGET.test(withoutMessages)) return { decision: "deny", reason: `subagent may not modify framework state through the shell (${writes[1]})` };
+    if (writes && !safe && !subagent && /risk-acceptances\.md/i.test(seg)) ask("risk acceptances require human approval");
     if (readOnly && writes && !safe) return { decision: "deny", reason: `read-only agent: ${writes[1]}` };
   }
-  return { decision: "allow", reason: null };
+  return pending ?? { decision: "allow", reason: null };
 }

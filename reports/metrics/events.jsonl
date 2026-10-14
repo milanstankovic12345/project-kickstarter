@@ -25,3 +25,8 @@
 {"ts":"2026-10-14T21:48:48.851Z","type":"transition","task":"TASK-002","from":"review","to":"in_progress","agent":"implementer","attempts":1,"reason":null}
 {"ts":"2026-10-14T21:50:59.050Z","type":"handoff_saved","task":"TASK-002","status":"done","agent":"implementer"}
 {"ts":"2026-10-14T21:50:59.144Z","type":"transition","task":"TASK-002","from":"in_progress","to":"review","agent":"implementer","attempts":1,"reason":null}
+{"ts":"2026-10-14T21:52:34.391Z","type":"review_saved","task":"TASK-002","kind":"code","reviewer":"code-reviewer","verdict":"approve","findings":{"critical":0,"high":1,"medium":3,"low":0,"info":0}}
+{"ts":"2026-10-14T21:55:01.637Z","type":"review_saved","task":"TASK-002","kind":"security","reviewer":"security-reviewer","verdict":"block","findings":{"critical":0,"high":1,"medium":2,"low":5,"info":0}}
+{"ts":"2026-10-14T21:55:01.823Z","type":"transition","task":"TASK-002","from":"review","to":"in_progress","agent":"implementer","attempts":2,"reason":null}
+{"ts":"2026-10-14T21:57:07.833Z","type":"handoff_saved","task":"TASK-002","status":"done","agent":"implementer"}
+{"ts":"2026-10-14T21:57:07.918Z","type":"transition","task":"TASK-002","from":"in_progress","to":"review","agent":"implementer","attempts":2,"reason":null}
