@@ -1,0 +1,242 @@
+{
+  "version": 1,
+  "plugin_namespace": "project-kickstarter",
+  "agents": {
+    "orchestrator": {
+      "group": "orchestration",
+      "tier": "reasoning",
+      "access": "orchestrate",
+      "always": true
+    },
+    "planner": {
+      "group": "orchestration",
+      "tier": "reasoning",
+      "access": "plan",
+      "always": true
+    },
+    "project-discoverer": {
+      "group": "orchestration",
+      "tier": "fast",
+      "access": "profile",
+      "always": true
+    },
+    "architect": {
+      "group": "engineering",
+      "tier": "reasoning",
+      "access": "docs"
+    },
+    "implementer": {
+      "group": "engineering",
+      "tier": "coding",
+      "access": "write",
+      "always": true
+    },
+    "backend-engineer": {
+      "group": "engineering",
+      "tier": "coding",
+      "access": "write"
+    },
+    "frontend-engineer": {
+      "group": "engineering",
+      "tier": "ui",
+      "access": "write"
+    },
+    "database-engineer": {
+      "group": "engineering",
+      "tier": "coding",
+      "access": "write"
+    },
+    "test-engineer": {
+      "group": "engineering",
+      "tier": "coding",
+      "access": "write",
+      "always": true
+    },
+    "refactoring-engineer": {
+      "group": "engineering",
+      "tier": "coding",
+      "access": "write"
+    },
+    "devops-engineer": {
+      "group": "engineering",
+      "tier": "coding",
+      "access": "write"
+    },
+    "performance-engineer": {
+      "group": "engineering",
+      "tier": "reasoning",
+      "access": "write"
+    },
+    "integration-engineer": {
+      "group": "engineering",
+      "tier": "coding",
+      "access": "write"
+    },
+    "docs-writer": {
+      "group": "engineering",
+      "tier": "fast",
+      "access": "write",
+      "always": true
+    },
+    "code-reviewer": {
+      "group": "review",
+      "tier": "review",
+      "access": "review",
+      "always": true
+    },
+    "architecture-reviewer": {
+      "group": "review",
+      "tier": "review",
+      "access": "review"
+    },
+    "security-reviewer": {
+      "group": "security",
+      "tier": "security",
+      "access": "review",
+      "always": true
+    },
+    "threat-modeler": {
+      "group": "security",
+      "tier": "security",
+      "access": "docs"
+    },
+    "dependency-auditor": {
+      "group": "security",
+      "tier": "security",
+      "access": "audit"
+    },
+    "security-tester": {
+      "group": "security",
+      "tier": "coding",
+      "access": "write"
+    },
+    "ui-director": {
+      "group": "ui",
+      "tier": "ui",
+      "access": "docs"
+    },
+    "accessibility-auditor": {
+      "group": "ui",
+      "tier": "review",
+      "access": "review"
+    },
+    "visual-qa": {
+      "group": "ui",
+      "tier": "ui",
+      "access": "review"
+    },
+    "improvement-analyst": {
+      "group": "improvement",
+      "tier": "reasoning",
+      "access": "analyze",
+      "always": true
+    }
+  },
+  "access_levels": {
+    "orchestrate": {
+      "must_include": [
+        "Agent",
+        "Bash",
+        "Read"
+      ],
+      "must_exclude": [
+        "Edit",
+        "Write",
+        "NotebookEdit"
+      ],
+      "meaning": "delegates; changes state only through framework scripts"
+    },
+    "plan": {
+      "must_include": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash"
+      ],
+      "must_exclude": [
+        "Agent"
+      ],
+      "meaning": "writes tasks/ and plans only"
+    },
+    "profile": {
+      "must_include": [
+        "Read",
+        "Bash",
+        "Write"
+      ],
+      "must_exclude": [
+        "Agent",
+        "Edit"
+      ],
+      "meaning": "writes project-context/ only"
+    },
+    "write": {
+      "must_include": [
+        "Read",
+        "Edit",
+        "Write",
+        "Bash"
+      ],
+      "must_exclude": [
+        "Agent"
+      ],
+      "meaning": "implements inside task files_allowed"
+    },
+    "docs": {
+      "must_include": [
+        "Read",
+        "Write",
+        "Edit"
+      ],
+      "must_exclude": [
+        "Agent",
+        "Bash"
+      ],
+      "meaning": "writes documentation/design artifacts, cannot execute"
+    },
+    "review": {
+      "must_include": [
+        "Read",
+        "Grep",
+        "Glob",
+        "Bash"
+      ],
+      "must_exclude": [
+        "Agent",
+        "Edit",
+        "Write",
+        "NotebookEdit"
+      ],
+      "meaning": "cannot edit files; persists reviews via scripts/reports.mjs"
+    },
+    "audit": {
+      "must_include": [
+        "Read",
+        "Grep",
+        "Glob",
+        "Bash"
+      ],
+      "must_exclude": [
+        "Agent",
+        "Edit",
+        "Write",
+        "NotebookEdit"
+      ],
+      "meaning": "runs audit tools, cannot edit files"
+    },
+    "analyze": {
+      "must_include": [
+        "Read",
+        "Grep",
+        "Glob",
+        "Bash",
+        "Write"
+      ],
+      "must_exclude": [
+        "Agent",
+        "Edit"
+      ],
+      "meaning": "reads evidence, writes proposals only"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project-kickstarter/handoff.schema.json",
+  "title": "Agent handoff frontmatter (reports/handoffs/TASK-NNN.md)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task", "agent", "status", "summary", "files_modified", "tests", "unresolved", "risks", "decisions", "next_steps"],
+  "properties": {
+    "task": { "type": "string", "pattern": "^TASK-[0-9]{3,}$" },
+    "agent": { "type": "string", "minLength": 1 },
+    "model": { "type": ["string", "null"] },
+    "attempt": { "type": "integer", "minimum": 0 },
+    "status": { "enum": ["done", "done_with_concerns", "blocked", "failed"] },
+    "summary": { "type": "string", "minLength": 10, "maxLength": 600 },
+    "files_modified": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["cmd", "exit_code", "summary"],
+        "properties": {
+          "cmd": { "type": "string", "minLength": 1 },
+          "exit_code": { "type": "integer" },
+          "summary": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "unresolved": { "type": "array", "items": { "type": "string" } },
+    "risks": { "type": "array", "items": { "type": "string" } },
+    "decisions": { "type": "array", "items": { "type": "string" } },
+    "next_steps": { "type": "array", "items": { "type": "string" } },
+    "blocker": { "type": ["string", "null"] }
+  }
+}
