@@ -30,7 +30,7 @@ acceptance:
   - Implementers cannot write review files or task state via Bash or Write
   - Rework rounds archive stale handoffs and reviews
 max_retries: 2
-attempts: 0
+attempts: 1
 created: 2026-10-14
 updated: 2026-10-14
 ---

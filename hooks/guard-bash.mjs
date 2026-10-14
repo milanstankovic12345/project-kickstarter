@@ -13,7 +13,7 @@ if (!frameworkRoot(input)) process.exit(0);
 const access = agentAccess(input.agent_type);
 const subagent = Boolean(input.agent_type);
 const readOnly = READ_ONLY_ACCESS.has(access) || access === "orchestrate";
-const { decision, reason } = classify(input.tool_input?.command, { readOnly, subagent, canSaveReviews: !subagent || READ_ONLY_ACCESS.has(access) });
+const { decision, reason } = classify(input.tool_input?.command, { readOnly, subagent, canSaveReviews: !subagent || READ_ONLY_ACCESS.has(access), access });
 if (decision === "deny") {
   emitPreToolUse("deny", `project-kickstarter guard: blocked (${reason}). If this is truly intended, a human should run it manually.`);
 } else if (decision === "ask") {

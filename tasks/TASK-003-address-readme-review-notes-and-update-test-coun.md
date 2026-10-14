@@ -1,7 +1,7 @@
 ---
 id: TASK-003
 title: Address README review notes and update test counts
-status: review
+status: done
 agent: docs-writer
 skills: []
 model_tier: fast

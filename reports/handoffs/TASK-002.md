@@ -2,56 +2,36 @@
 task: TASK-002
 agent: implementer
 model: claude-opus-5-5
-attempt: 0
+attempt: 1
 status: done
-summary: Fixed independent-review findings F1-F12 in gate, handoff scope, lifecycle and guards, each with a regression test that fails on the pre-fix code.
+summary: Round 2 - fixed blocking review findings CR-1 (heredoc opener redirect) and SEC-1 (review-save/transition smuggling) plus CR-2..CR-4 and SEC-2..SEC-5, each with regression tests that fail on the round-1 commit.
 files_modified:
-  - config/protected-paths.json
   - hooks/guard-bash.mjs
-  - hooks/guard-paths.mjs
   - hooks/lib/bash-rules.mjs
-  - scripts/lib/frontmatter.mjs
-  - scripts/lib/gate.mjs
-  - scripts/lib/glob.mjs
-  - scripts/lib/handoff.mjs
-  - scripts/lib/project.mjs
-  - scripts/lib/tasks.mjs
-  - scripts/reports.mjs
-  - scripts/validate.mjs
-  - skills/orchestration/SKILL.md
   - skills/project-kickstarter/templates/hooks/guard-bash.mjs
-  - tests/integration/hooks.test.mjs
-  - tests/integration/validate.test.mjs
-  - tests/unit/review-findings.test.mjs
-  - tests/unit/tasks.test.mjs
-  - tests/unit/yaml.test.mjs
+  - tests/unit/review-round2.test.mjs
 tests:
   - cmd: node scripts/run-tests.mjs
     exit_code: 0
-    summary: 75 tests, 75 pass, 0 fail
+    summary: 83 tests, 83 pass, 0 fail
   - cmd: node scripts/validate.mjs
     exit_code: 0
     summary: "OK: 24 agents, 12 skills, 8 commands checked; 0 error(s), 0 warning(s)"
 unresolved: []
 risks:
-  - Bash classification remains pattern-based (documented limitation); F1 shell-level protection covers common write forms only
+  - Bash classification is pattern-based; deliberate obfuscation (eval, base64, variable indirection) remains out of scope (documented)
 decisions:
-  - "Scope widened to scripts/reports.mjs and scripts/validate.mjs after the handoff validator rejected the first save (scope violation); recorded in the task Context"
-  - "Executed by the main session in the implementer role (plugin agents unavailable in this session)"
+  - "Worker subagents may no longer run tasks.mjs transition; only orchestrator/planner (and the main thread) do"
+  - "Framework-script exemption now tokenizes the invocation (flags anywhere, quoted actions)"
+  - Executed by the main session in the implementer role (plugin agents unavailable in this session)
 next_steps:
-  - Independent code and security re-review of the fixes
+  - Round-2 code and security re-review against reports/reviews/TASK-002-*.round-1.md
 blocker: null
 ---
 
 ## What changed
-- glob: path normalisation, escapesRoot, ** inside braces, nocase option (F2, F11)
-- handoff: rejects paths escaping the project root (F2)
-- gate/reports: namespace- and case-insensitive reviewer independence; word-boundary approver check rejecting agent-like slugs (F5, F12)
-- tasks: any re-entry to in_progress after a round consumes retry budget and archives the round's handoff/reviews as *.round-N.md (F6, F7)
-- frontmatter: BOM-tolerant, line-ending-preserving in-place updates (F8, F12)
-- bash-rules: anchored command-word write detection on quote-blanked segments, anchored framework-script exemption, rm long options, secret-file references after any command, env-dump anchoring, subagent denial of review/audit saves and of shell writes to framework state (F1, F3, F4, F9, F10, F12)
-- guard-paths/protected-paths: subagents cannot Edit/Write reviews, handoffs, audits, risk acceptances; case-insensitive matching on Windows/macOS (F1, F11)
-- validate.mjs: flags stray control characters in scripts/tests (found two real occurrences during this task)
+hooks/lib/bash-rules.mjs: heredoc opener tail preserved (CR-1); fd-aware REDIRECT incl. 1>, &>, >| (CR-2); normalizeSegment strips shell keywords, env/xargs wrappers and git global options, sh -c bodies classified recursively, find -delete / xargs rm / npm run -- --fix rules (CR-3, SEC-2, SEC-5); secret-file check ignores message-option values and matches globs (CR-4, SEC-4); tokenized framework-script detection denies non-reviewer review/audit saves regardless of flag order or quoting and worker transitions (SEC-1); interpreter one-liners touching framework state or writing files are denied for subagents/read-only agents (SEC-3).
+hooks/guard-bash.mjs passes the agent's access level. Template regenerated.
 
 ## Evidence
-tests/unit/review-findings.test.mjs: 11 tests; all 11 fail against the pre-fix commit (run in a git worktree) and pass after the fix.
+tests/unit/review-round2.test.mjs: 8 tests, 0/8 pass on commit f43bd1a (round 1), 8/8 now.

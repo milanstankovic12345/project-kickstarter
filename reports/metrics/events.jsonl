@@ -18,3 +18,10 @@
 {"ts":"2026-10-14T21:45:01.055Z","type":"transition_rejected","task":"TASK-003","from":"in_progress","to":"review","errors":["handoff missing: reports/handoffs/TASK-003.md"]}
 {"ts":"2026-10-14T21:45:17.624Z","type":"handoff_saved","task":"TASK-003","status":"done","agent":"docs-writer"}
 {"ts":"2026-10-14T21:45:17.695Z","type":"transition","task":"TASK-003","from":"in_progress","to":"review","agent":"docs-writer","attempts":0,"reason":null}
+{"ts":"2026-10-14T21:46:42.694Z","type":"review_saved","task":"TASK-003","kind":"code","reviewer":"code-reviewer","verdict":"approve","findings":{"critical":0,"high":0,"medium":0,"low":0,"info":0}}
+{"ts":"2026-10-14T21:46:42.859Z","type":"transition","task":"TASK-003","from":"review","to":"done","agent":"docs-writer","attempts":0,"reason":null}
+{"ts":"2026-10-14T21:47:45.937Z","type":"review_saved","task":"TASK-002","kind":"code","reviewer":"code-reviewer","verdict":"block","findings":{"critical":0,"high":1,"medium":3,"low":0,"info":0}}
+{"ts":"2026-10-14T21:48:48.690Z","type":"review_saved","task":"TASK-002","kind":"security","reviewer":"security-reviewer","verdict":"block","findings":{"critical":0,"high":1,"medium":2,"low":2,"info":0}}
+{"ts":"2026-10-14T21:48:48.851Z","type":"transition","task":"TASK-002","from":"review","to":"in_progress","agent":"implementer","attempts":1,"reason":null}
+{"ts":"2026-10-14T21:50:59.050Z","type":"handoff_saved","task":"TASK-002","status":"done","agent":"implementer"}
+{"ts":"2026-10-14T21:50:59.144Z","type":"transition","task":"TASK-002","from":"in_progress","to":"review","agent":"implementer","attempts":1,"reason":null}
