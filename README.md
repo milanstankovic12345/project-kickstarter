@@ -448,10 +448,71 @@ This repository dogfoods the framework. It contains its own
 
 The interview skill works in Claude Code as
 `/project-kickstarter:project-kickstarter`. It also works in other agents
-that read the standard `SKILL.md` format. In other IDEs only the interview
-skill applies. The framework layer (agents, hooks, commands, scripts) is
-Claude Code-specific, so the interview falls back to its built-in
-templates for the agent team and task plan.
+that read the standard `SKILL.md` format. The framework layer (agents,
+hooks, commands, scripts) is Claude Code-specific. For **Cursor, Codex and
+GitHub Copilot** it can be exported into the project (next section). In
+other IDEs the interview falls back to its built-in templates for the agent
+team and task plan.
+
+### Framework layer in Cursor, Codex and GitHub Copilot
+
+```bash
+node scripts/export-ide.mjs <cursor|codex|copilot> --project /path/to/your-project
+# then, inside that project:
+node .agent-framework/runtime/scripts/bootstrap.mjs apply
+node .agent-framework/runtime/scripts/tasks.mjs validate
+```
+
+Options: `--dry-run`, `--force` (keeps a backup), `--no-ci`, `--no-hooks`
+(Cursor), `--install-git-hooks`, `--json`. The command is idempotent. A file
+you changed after an export is never overwritten: a proposal is written to
+`.agent-framework/proposed/` and the command exits 3.
+
+How it works: the scripts do not depend on any IDE, so the exporter copies
+them to `.agent-framework/runtime/` and points every exported text at that
+folder. Agents and commands become each IDE's native files. The scripts keep
+enforcing the task state machine, file scopes, handoffs and the review gate.
+
+| | Cursor | Codex | GitHub Copilot |
+|---|---|---|---|
+| Always-on rules | `.cursor/rules/agent-framework.mdc` | marked section in `AGENTS.md` | marked section in `.github/copilot-instructions.md`, plus `.github/instructions/agent-framework-artifacts.instructions.md` |
+| Roles (agents) | `.agents/skills/agent-<name>/SKILL.md`, run with `/agent-<name>` | same folder, run with `$agent-<name>` | `.github/agents/<name>.agent.md`, pick it in the agent picker |
+| Commands | `.agents/skills/cmd-<name>/SKILL.md`, run with `/cmd-<name>` | same, `$cmd-<name>` | `.github/prompts/<name>.prompt.md`, run with `/<name>` |
+| Guard hooks | `.cursor/hooks.json` (experimental) | none | none |
+| Backstop (all) | `.github/workflows/agent-framework.yml` and, with `--install-git-hooks`, a git pre-commit hook; both run `ci-check.mjs` | same | same |
+
+Differences from Claude Code, by design:
+
+- **One role at a time.** These IDEs get no isolated, parallel subagents from
+  the framework, so the exported orchestrator and commands tell the agent to
+  take each role in turn. Reviews should run in a fresh chat. The loop is in
+  `.agent-framework/runtime/docs/sequential-mode.md`. There are no parallel
+  batches and no automatic model routing (Copilot agents omit `model`
+  because the framework's tier names are not Copilot models).
+- **Read-only roles are instructions, not permissions.** Copilot reviewers
+  get no `edit` tool. In Cursor and Codex nothing stops a reviewer from
+  editing, apart from the experimental Cursor hooks. The scripts still
+  reject a review written by the implementing agent.
+- **Cursor hooks** run the existing guards through
+  `hooks/adapters/cursor.mjs`. Cursor's `preToolUse` cannot ask, so an edit
+  that would need human approval (for example `.env`) is denied with a
+  message to ask the user. The guards cannot tell which role is active, so
+  the per-role restrictions of the Claude hooks do not apply. Shell
+  commands can still be `ask`ed.
+- **Not included:** Codex custom subagent files (`.codex/agents/*.toml`),
+  because the documented format could not be confirmed; Codex custom
+  prompts, which are user-global only; and parallel dispatch in any IDE.
+- `bootstrap.mjs apply` still writes a README section that names the Claude
+  Code commands. Edit it if your team does not use Claude Code.
+- Cursor and Codex both use `.agents/skills/`. Exporting both into one
+  project works, but the files then carry the last export's command syntax.
+
+File formats were taken from the vendors' documentation (Cursor rules,
+skills and hooks; Codex skills; Copilot custom agents, prompt files and
+instructions). **Nothing has been run inside the three IDEs.** Automated
+tests cover the exporter, the vendored scripts running standalone and the
+Cursor adapter run as a process. Before relying on an IDE, open an exported
+project in it and run one task end to end.
 
 Usage, in order:
 

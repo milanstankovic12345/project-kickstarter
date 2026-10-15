@@ -11,6 +11,7 @@
     "validate": "node scripts/validate.mjs",
     "routing:check": "node scripts/routing.mjs check",
     "routing:sync": "node scripts/routing.mjs sync",
+    "export:ide": "node scripts/export-ide.mjs",
     "check": "node scripts/validate.mjs && node scripts/run-tests.mjs"
   }
 }
