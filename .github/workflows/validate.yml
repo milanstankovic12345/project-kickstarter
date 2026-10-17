@@ -1,0 +1,30 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: ["18", "22"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Repository validator
+        run: node scripts/validate.mjs
+      - name: Routing consistency
+        run: node scripts/routing.mjs check
+      - name: Hook template in sync
+        run: node scripts/sync-hook-template.mjs --check
+      - name: Tests
+        run: node scripts/run-tests.mjs

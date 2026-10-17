@@ -1,6 +1,8 @@
 {
   "name": "milan-plugins",
-  "owner": { "name": "milan" },
+  "owner": {
+    "name": "milan"
+  },
   "metadata": {
     "description": "Milan's Claude Code plugins and skills"
   },
@@ -8,7 +10,7 @@
     {
       "name": "project-kickstarter",
       "source": "./",
-      "description": "Interview-driven project kickstarter: questionnaire -> PRD, tech stack, blueprint, UI/UX, rules, skills, CLAUDE.md, agent team, task plan."
+      "description": "Interview-driven project kickstarter plus an adaptive multi-agent engineering framework (bootstrap, tasks, orchestration, independent review, security, premium UI, guardrails)."
     }
   ]
 }

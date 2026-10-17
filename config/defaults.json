@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "paths": {
+    "tasks": "tasks",
+    "handoffs": "reports/handoffs",
+    "reviews": "reports/reviews",
+    "metrics": "reports/metrics/events.jsonl",
+    "progress": "reports/progress.md",
+    "profile": "project-context/project-profile.md",
+    "risk_acceptances": "project-context/risk-acceptances.md",
+    "improvements": "reports/improvements"
+  },
+  "concurrency": {
+    "max_parallel": 3
+  },
+  "retries": {
+    "default_max": 2,
+    "hard_cap": 5
+  },
+  "gates": {
+    "required_reviews": [
+      "code"
+    ],
+    "block_severities": [
+      "critical",
+      "high"
+    ],
+    "require_verified_fix": true,
+    "security_review_on_sensitive_paths": true
+  },
+  "task_limits": {
+    "max_scope_globs": 12,
+    "max_steps": 15,
+    "max_acceptance": 10
+  },
+  "security_sensitive_paths": [
+    "**/auth/**",
+    "**/*auth*",
+    "**/login*",
+    "**/session*",
+    "**/password*",
+    "**/crypto/**",
+    "**/*crypto*",
+    "**/payment*/**",
+    "**/billing/**",
+    "**/middleware/**",
+    "**/api/**",
+    "**/routes/**",
+    "**/controllers/**",
+    "**/*.sql",
+    "**/migrations/**",
+    "**/Dockerfile",
+    "**/docker-compose*.yml",
+    ".github/workflows/**",
+    "**/*.tf",
+    "**/k8s/**",
+    "**/.env*",
+    "**/permissions*",
+    "**/acl*",
+    "**/upload*"
+  ],
+  "enabled_agents": [],
+  "specialists": [],
+  "validation_commands": {},
+  "review_agents": {
+    "code": "code-reviewer",
+    "security": "security-reviewer",
+    "ui": "accessibility-auditor",
+    "visual": "visual-qa",
+    "architecture": "architecture-reviewer"
+  }
+}

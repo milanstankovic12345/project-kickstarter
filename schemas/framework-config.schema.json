@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project-kickstarter/framework-config.schema.json",
+  "title": "Project framework config (.claude/agent-framework.json)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version"],
+  "properties": {
+    "version": { "const": 1 },
+    "generated_by": { "type": "string" },
+    "enabled_agents": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }, "uniqueItems": true },
+    "agent_aliases": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" } },
+    "specialists": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "tier"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "tier": { "enum": ["reasoning", "coding", "fast", "review", "security", "ui"] }
+        }
+      }
+    },
+    "validation_commands": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+    "concurrency": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "max_parallel": { "type": "integer", "minimum": 1, "maximum": 10 } }
+    },
+    "retries": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_max": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "hard_cap": { "type": "integer", "minimum": 0, "maximum": 5 }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required_reviews": { "type": "array", "items": { "enum": ["code", "security", "ui", "visual", "architecture"] }, "uniqueItems": true },
+        "block_severities": { "type": "array", "items": { "enum": ["critical", "high", "medium", "low", "info"] }, "minItems": 1, "uniqueItems": true },
+        "require_verified_fix": { "type": "boolean" },
+        "security_review_on_sensitive_paths": { "type": "boolean" }
+      }
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tiers": {
+          "type": "object",
+          "propertyNames": { "pattern": "^(reasoning|coding|fast|review|security|ui)$" },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "model": { "type": "string" },
+              "fallbacks": { "type": "array", "items": { "type": "string" } },
+              "effort": { "enum": ["low", "medium", "high", "xhigh", "max", null] }
+            }
+          }
+        },
+        "agents": { "type": "object", "additionalProperties": { "enum": ["reasoning", "coding", "fast", "review", "security", "ui"] } },
+        "escalate_after_attempts": { "type": "integer", "minimum": 1, "maximum": 5 }
+      }
+    },
+    "security_sensitive_paths": { "type": "array", "items": { "type": "string" } },
+    "paths": { "type": "object", "additionalProperties": { "type": "string" } },
+    "task_limits": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } },
+    "review_agents": { "type": "object", "additionalProperties": { "type": "string" } }
+  }
+}

@@ -28,3 +28,7 @@ surface) and the accepted tech stack, with tests.
 ## Output contract
 End with: files changed, task ID, tests added, any blueprint deviations
 (proposed, not applied).
+If the task is ambiguous, needs files outside its scope, or a command
+cannot run: stop and report `Status: BLOCKED` with the reason; never guess.
+Always end with `Status: DONE | DONE_WITH_CONCERNS | BLOCKED | FAILED` and
+the exact commands you ran with their results.

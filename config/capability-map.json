@@ -1,0 +1,330 @@
+{
+  "version": 1,
+  "notes": "Declarative rules from discovery signals to framework components. Conditions are evaluated by scripts/lib/bootstrap.mjs against discover() output. Only agents whose rule fires (plus registry 'always' agents) are enabled; nothing is generated 'just in case'.",
+  "agent_rules": [
+    {
+      "id": "ui",
+      "when": {
+        "ui.has_ui": true
+      },
+      "enable": [
+        "frontend-engineer",
+        "ui-director",
+        "accessibility-auditor",
+        "visual-qa"
+      ],
+      "reason": "UI code or frontend framework detected"
+    },
+    {
+      "id": "backend",
+      "when": {
+        "any": [
+          {
+            "api.styles": "nonempty"
+          },
+          {
+            "frameworks.category": [
+              "backend",
+              "fullstack"
+            ]
+          }
+        ]
+      },
+      "enable": [
+        "backend-engineer",
+        "integration-engineer"
+      ],
+      "reason": "server/API code detected"
+    },
+    {
+      "id": "data",
+      "when": {
+        "any": [
+          {
+            "data.orm": "nonempty"
+          },
+          {
+            "data.databases": "nonempty"
+          },
+          {
+            "data.migrations": "nonempty"
+          }
+        ]
+      },
+      "enable": [
+        "database-engineer"
+      ],
+      "reason": "database, ORM or migrations detected"
+    },
+    {
+      "id": "delivery",
+      "when": {
+        "any": [
+          {
+            "ci": "nonempty"
+          },
+          {
+            "containers.dockerfiles": "nonempty"
+          },
+          {
+            "containers.compose": "nonempty"
+          },
+          {
+            "iac": "nonempty"
+          }
+        ]
+      },
+      "enable": [
+        "devops-engineer"
+      ],
+      "reason": "CI, containers or IaC detected"
+    },
+    {
+      "id": "auth",
+      "when": {
+        "any": [
+          {
+            "auth": "nonempty"
+          },
+          {
+            "security_sensitive_paths": "nonempty"
+          }
+        ]
+      },
+      "enable": [
+        "threat-modeler",
+        "security-tester"
+      ],
+      "reason": "authentication or security-sensitive code detected"
+    },
+    {
+      "id": "deps",
+      "when": {
+        "manifests": "nonempty"
+      },
+      "enable": [
+        "dependency-auditor"
+      ],
+      "reason": "dependency manifests present"
+    },
+    {
+      "id": "scale",
+      "when": {
+        "size.files": {
+          "gte": 300
+        }
+      },
+      "enable": [
+        "architect",
+        "architecture-reviewer",
+        "refactoring-engineer",
+        "performance-engineer"
+      ],
+      "reason": "codebase large enough for architecture work (>= 300 files)"
+    },
+    {
+      "id": "monorepo",
+      "when": {
+        "monorepo.tool": "nonempty"
+      },
+      "enable": [
+        "architect",
+        "architecture-reviewer"
+      ],
+      "reason": "monorepo detected"
+    }
+  ],
+  "specialist_rules": [
+    {
+      "id": "payments",
+      "when": {
+        "frameworks.category": [
+          "payments"
+        ]
+      },
+      "name": "payments-specialist",
+      "tier": "security",
+      "access": "write",
+      "focus": "payment flows, webhooks, idempotency, money arithmetic, PCI-relevant data handling",
+      "reason": "payment SDK detected"
+    },
+    {
+      "id": "ai",
+      "when": {
+        "frameworks.category": [
+          "ai",
+          "ml"
+        ]
+      },
+      "name": "ai-integration-specialist",
+      "tier": "coding",
+      "access": "write",
+      "focus": "LLM/ML integration: prompt and tool design, output validation, cost/latency limits, prompt-injection defenses, evaluation",
+      "reason": "AI/ML SDK detected"
+    },
+    {
+      "id": "realtime",
+      "when": {
+        "frameworks.category": [
+          "realtime"
+        ]
+      },
+      "name": "realtime-specialist",
+      "tier": "coding",
+      "access": "write",
+      "focus": "websocket/realtime protocols, connection lifecycle, backpressure, authz per channel",
+      "reason": "realtime library detected"
+    }
+  ],
+  "gap_rules": [
+    {
+      "id": "no-tests",
+      "when": {
+        "all": [
+          {
+            "testing.has_tests": false
+          },
+          {
+            "languages": "nonempty"
+          }
+        ]
+      },
+      "title": "Set up an automated test framework and first smoke test",
+      "agent": "test-engineer",
+      "scope": [
+        "tests/**",
+        "test/**",
+        "package.json",
+        "pyproject.toml",
+        "vitest.config.*",
+        "jest.config.*",
+        "pytest.ini"
+      ],
+      "acceptance": [
+        "A single documented command runs the test suite and exits 0",
+        "At least one smoke test exercises a real module"
+      ],
+      "validation_key": "test",
+      "priority": "p1"
+    },
+    {
+      "id": "no-ci",
+      "when": {
+        "all": [
+          {
+            "ci": "empty"
+          },
+          {
+            "manifests": "nonempty"
+          }
+        ]
+      },
+      "title": "Add CI pipeline running install, lint and tests",
+      "agent": "devops-engineer",
+      "scope": [
+        ".github/workflows/**"
+      ],
+      "acceptance": [
+        "Workflow runs on push and pull_request",
+        "Workflow runs the project's install, lint (if any) and test commands",
+        "Third-party actions pinned to a version or SHA; permissions minimal"
+      ],
+      "validation_cmd": "node -e \"process.exit(require('fs').readdirSync('.github/workflows').length?0:1)\"",
+      "priority": "p2"
+    },
+    {
+      "id": "no-threat-model",
+      "when": {
+        "all": [
+          {
+            "docs.threat_model": false
+          },
+          {
+            "any": [
+              {
+                "auth": "nonempty"
+              },
+              {
+                "security_sensitive_paths": "nonempty"
+              }
+            ]
+          }
+        ]
+      },
+      "title": "Create threat model for authentication and sensitive data flows",
+      "agent": "threat-modeler",
+      "scope": [
+        "docs/security/**"
+      ],
+      "acceptance": [
+        "docs/security/threat-model.md lists assets, trust boundaries and STRIDE threats with mitigation status",
+        "Residual risks listed for human decision"
+      ],
+      "validation_cmd": "node -e \"process.exit(require('fs').existsSync('docs/security/threat-model.md')?0:1)\"",
+      "review": [
+        "security"
+      ],
+      "priority": "p1"
+    },
+    {
+      "id": "no-design-direction",
+      "when": {
+        "all": [
+          {
+            "ui.has_ui": true
+          },
+          {
+            "docs.design_direction": false
+          }
+        ]
+      },
+      "title": "Document UI design direction and token inventory",
+      "agent": "ui-director",
+      "scope": [
+        "docs/design/**"
+      ],
+      "acceptance": [
+        "docs/design/direction.md defines personality, type scale, colour/spacing tokens and component inventory based on the existing UI",
+        "Inconsistencies in current UI listed with locations"
+      ],
+      "validation_cmd": "node -e \"process.exit(require('fs').existsSync('docs/design/direction.md')?0:1)\"",
+      "review": [
+        "ui"
+      ],
+      "priority": "p2"
+    },
+    {
+      "id": "env-not-ignored",
+      "when": {
+        "all": [
+          {
+            "secret_files": "nonempty"
+          },
+          {
+            "gitignore_covers_env": false
+          }
+        ]
+      },
+      "title": "Ensure secret files are git-ignored and documented via .env.example",
+      "agent": "devops-engineer",
+      "scope": [
+        ".gitignore",
+        ".env.example"
+      ],
+      "acceptance": [
+        ".gitignore excludes .env and other secret files found by discovery",
+        ".env.example lists required keys with placeholder values only"
+      ],
+      "validation_cmd": "git check-ignore -q .env",
+      "review": [
+        "security"
+      ],
+      "priority": "p0"
+    }
+  ],
+  "equivalents": {
+    "qa-engineer": "test-engineer",
+    "fullstack-engineer": "implementer",
+    "tech-lead": "planner"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "project-kickstarter",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Claude Code plugin: interview-driven kickstarter plus an adaptive multi-agent engineering framework (tasks, orchestration, independent review, security, premium UI, model routing).",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "scripts": {
+    "test": "node scripts/run-tests.mjs",
+    "validate": "node scripts/validate.mjs",
+    "routing:check": "node scripts/routing.mjs check",
+    "routing:sync": "node scripts/routing.mjs sync",
+    "export:ide": "node scripts/export-ide.mjs",
+    "check": "node scripts/validate.mjs && node scripts/run-tests.mjs"
+  }
+}

@@ -24,3 +24,7 @@ Find exploitable or compliance-violating issues before they ship.
 ## Output contract
 Findings table (severity | issue | location | remediation) and an overall
 verdict: APPROVE / APPROVE-WITH-NOTES / BLOCK.
+If the task is ambiguous, needs files outside its scope, or a command
+cannot run: stop and report `Status: BLOCKED` with the reason; never guess.
+Always end with `Status: DONE | DONE_WITH_CONCERNS | BLOCKED | FAILED` and
+the exact commands you ran with their results.

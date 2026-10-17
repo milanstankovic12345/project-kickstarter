@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "generated_by": "project-kickstarter bootstrap 0.2.0",
+  "enabled_agents": [
+    "code-reviewer",
+    "dependency-auditor",
+    "devops-engineer",
+    "docs-writer",
+    "implementer",
+    "improvement-analyst",
+    "orchestrator",
+    "planner",
+    "project-discoverer",
+    "security-reviewer",
+    "test-engineer"
+  ],
+  "agent_aliases": {},
+  "specialists": [],
+  "validation_commands": {
+    "install": "npm install",
+    "test": "npm test",
+    "check": "npm run check"
+  },
+  "concurrency": {
+    "max_parallel": 3
+  },
+  "gates": {
+    "required_reviews": [
+      "code"
+    ]
+  }
+}

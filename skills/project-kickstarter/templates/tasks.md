@@ -2,7 +2,8 @@
 
 > Phased, dependency-ordered. Each task names a suggested owner from the
 > agent team. Execute top-to-bottom; a task may start when all its
-> dependencies are Done.
+> dependencies are Done. (Fallback format. With the project-kickstarter
+> plugin, tasks live in `tasks/TASK-NNN-*.md`; see the task-planning skill.)
 
 ## Phase 1 — Foundation
 | ID | Task | Owner | Depends on | Acceptance criteria |
@@ -31,5 +32,7 @@
 
 Rules:
 - One task = one reviewable unit (≤ ~400 lines changed ideally).
-- Every task lists its acceptance criteria BEFORE starting work.
+- Every task lists its acceptance criteria and the exact command that
+  proves them BEFORE work starts.
+- Status per task: todo / in progress / review / done / blocked (with reason).
 - qa-engineer writes tests against acceptance criteria, not implementation.

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "notes": "Logical tiers map to Claude Code model aliases verified in the model-config docs (2026-10-14). Aliases resolve to the newest model of that family available to the user; restrict with availableModels in managed settings. Override per project in .claude/agent-framework.json under routing.",
+  "allowed_models": ["inherit", "opus", "sonnet", "haiku", "fable", "best", "opus[1m]", "sonnet[1m]"],
+  "allowed_model_id_pattern": "^claude-[a-z0-9]+(-[a-z0-9]+)*$",
+  "strength_order": ["haiku", "sonnet", "opus", "fable"],
+  "escalate_after_attempts": 2,
+  "tiers": {
+    "reasoning": { "model": "opus",   "fallbacks": ["sonnet"], "effort": "high", "purpose": "planning, architecture, orchestration, ambiguous trade-offs" },
+    "coding":    { "model": "sonnet", "fallbacks": ["opus"],   "effort": null,   "purpose": "scoped implementation with clear acceptance criteria" },
+    "fast":      { "model": "haiku",  "fallbacks": ["sonnet"], "effort": null,   "purpose": "mechanical work: discovery scans, docs updates, summarisation" },
+    "review":    { "model": "opus",   "fallbacks": ["sonnet"], "effort": "high", "purpose": "independent code/architecture/a11y review; differs from coding tier on purpose" },
+    "security":  { "model": "opus",   "fallbacks": ["sonnet"], "effort": "high", "purpose": "independent security review, threat modeling, supply chain" },
+    "ui":        { "model": "sonnet", "fallbacks": ["opus"],   "effort": null,   "purpose": "UI direction and premium frontend implementation" }
+  }
+}

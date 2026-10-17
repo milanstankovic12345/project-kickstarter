@@ -8,7 +8,7 @@ support.
 
 | IDE | Instructions file | Rules dir | Agents/subagents | Skills | Native hooks |
 |---|---|---|---|---|---|
-| **Claude Code** | `CLAUDE.md` + `.claude/rules/*.md` | `.claude/rules/` | `.claude/agents/*.md` | `.claude/skills/` | ✅ `.claude/settings.json` — events: SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, PermissionRequest, Stop, SubagentStop, TaskCreated/Completed, PostToolUseFailure |
+| **Claude Code** | `CLAUDE.md` + `.claude/rules/*.md` | `.claude/rules/` | `.claude/agents/*.md` | `.claude/skills/` | ✅ `.claude/settings.json` (or plugin `hooks/hooks.json`). Common events: SessionStart, UserPromptSubmit, PreToolUse, PermissionRequest, PostToolUse, PostToolUseFailure, SubagentStart, SubagentStop, TaskCreated, TaskCompleted, Stop, PreCompact, SessionEnd. Full list: https://code.claude.com/docs/en/hooks |
 | **Cursor** | `AGENTS.md` | `.cursor/rules/*.mdc` | — | reads `SKILL.md` folders | ✅ `hooks.json` (project or user level) — spawned processes, JSON over stdio |
 | **OpenAI Codex CLI** | `AGENTS.md` | — | — | reads `SKILL.md` | ❌ not native — enforce via AGENTS.md protocol + CI |
 | **GitHub Copilot** | `.github/copilot-instructions.md` | — | `.github/copilot-agents.yml` (where supported) | partial | ❌ not native — use instructions + CI |
@@ -33,8 +33,14 @@ Rules of thumb:
 | Run tests before finishing | `Stop` agent hook | hooks.json stop script | CI required check |
 | Context on session start | `SessionStart` | hooks.json session start | AGENTS.md intro section |
 
-- See `templates/hooks/claude-code-settings-snippet.json` for a safe
-  starting set for Claude Code (PostToolUse format + PreToolUse guard).
+- When the project-kickstarter plugin is installed and the project has
+  been bootstrapped, its opt-in plugin hooks already provide the guards.
+  Don't also install the template hooks.
+- Otherwise, `templates/hooks/claude-code-settings-snippet.json` is a safe
+  starting set for Claude Code: a PreToolUse guard and a PostToolUse audit
+  log. `templates/hooks/guard-bash.mjs` is generated from the framework's
+  rule set. PreToolUse output must use
+  `hookSpecificOutput.permissionDecision` and `permissionDecisionReason`.
 - For Cursor, write equivalent logic as a stdio JSON script and register in
   `hooks.json` — same script can often be reused since both speak JSON.
 - For IDEs without hooks, write `docs/kickstart/hooks-report.md`: table of
