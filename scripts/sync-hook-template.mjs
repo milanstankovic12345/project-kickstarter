@@ -28,15 +28,20 @@ try {
   input = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
 } catch { process.exit(0); }
 
-const { decision, reason } = classify(input?.tool_input?.command);
-if (decision !== "allow") {
-  process.stdout.write(JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: decision,
-      permissionDecisionReason: decision === "deny" ? \`Blocked: \${reason}. Run it manually if truly intended.\` : \`\${reason} — requires explicit approval.\`,
-    },
-  }) + "\\n");
+try {
+  const { decision, reason } = classify(input?.tool_input?.command);
+  if (decision !== "allow") {
+    process.stdout.write(JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: decision,
+        permissionDecisionReason: decision === "deny" ? \`Blocked: \${reason}. Run it manually if truly intended.\` : \`\${reason} — requires explicit approval.\`,
+      },
+    }) + "\\n");
+  }
+} catch (e) {
+  // Fail open on internal errors, but say so — see hooks/guard-bash.mjs.
+  process.stderr.write(\`guard-bash (standalone): internal error, failing open (\${e.message})\\n\`);
 }
 process.exit(0);
 `;

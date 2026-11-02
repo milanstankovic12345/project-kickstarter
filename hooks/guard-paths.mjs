@@ -58,7 +58,9 @@ try {
       }
     }
   }
-} catch {
+} catch (e) {
   // Fail open on internal errors; guard-bash and permissions still apply.
+  // Visible on stderr so a persistent bug here doesn't silently stop guarding.
+  process.stderr.write(`project-kickstarter guard-paths: internal error, failing open (${e.message})\n`);
 }
 process.exit(0);

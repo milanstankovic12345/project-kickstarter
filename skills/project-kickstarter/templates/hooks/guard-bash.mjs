@@ -92,6 +92,32 @@ const INTERPRETER_WRITE = /\b(writeFile(Sync)?|appendFile(Sync)?|rmSync|rmdirSyn
 // Framework state that subagents must never write through the shell.
 const PROTECTED_TARGET = /(^|[\s"'\/\\=>(])(tasks[\/\\]TASK-\d+[^\s"']*\.md|reports[\/\\](reviews|handoffs|audits|metrics)[\/\\]?|risk-acceptances\.md|agent-framework(\.json|[\/\\]manifest\.json)|protected-paths\.json|model-routing\.json|agent-registry\.json)/i;
 
+/** `cd`/`pushd` argument (the rest of the segment, e.g. trailing options, is ignored). */
+const CD_CMD = /^(?:cd|pushd)\s+(\S+)/;
+
+/** Directories that make every write inside them protected, regardless of the write's own path text (SEC-9: `cd reports/reviews && cat > x.md`). */
+const PROTECTED_CWD = /^(tasks|reports[\/\\](reviews|handoffs|audits|metrics))(\/|$)/i;
+
+/**
+ * Join a `cd`/`pushd` target onto a tracked relative cwd (Windows- and
+ * POSIX-slash tolerant), so a later write segment can be checked against
+ * the resulting path, not just its own literal text. An absolute path,
+ * home (`~`), a drive letter or `cd -` resets tracking to that raw value
+ * (or empty) rather than guessing.
+ */
+function cdJoin(cwd, target) {
+  const t = target.replace(/^["']|["']$/g, "");
+  if (t === "-" || t === "") return "";
+  if (/^(\/|~|[A-Za-z]:)/.test(t)) return t.replace(/\\/g, "/");
+  const parts = `${cwd}/${t}`.replace(/\\/g, "/").split("/");
+  const out = [];
+  for (const p of parts) {
+    if (p === "" || p === ".") continue;
+    if (p === "..") out.pop(); else out.push(p);
+  }
+  return out.join("/");
+}
+
 /** Heredoc bodies are data (e.g. review text quoting "rm -rf"), not commands. The opener line's tail is kept. */
 function stripHeredocs(command) {
   return String(command ?? "").replace(/<<-?\s*(['"]?)([A-Za-z_][\w-]*)\1([^\n]*)\n[\s\S]*?\n\s*\2\s*(?=\n|$)/g, "<<HEREDOC$3");
@@ -220,7 +246,12 @@ function classify(command, { readOnly = false, subagent = false, canSaveReviews 
       const inner = classify(h.body, opts, depth + 1);
       if (inner.decision === "deny") return inner;
       if (inner.decision === "ask") ask(inner.reason);
-    } else if (INTERPRETER_CMD.test(h.cmd) && INTERPRETER_WRITE.test(h.body)) {
+    } else if (INTERPRETER_CMD.test(h.cmd) && !frameworkCall(h.cmd) && INTERPRETER_WRITE.test(h.body)) {
+      // A bare interpreter heredoc (no script argument, e.g. `node <<EOF`) runs
+      // the body as code. One naming a trusted framework script (`node
+      // .../reports.mjs save ...`) only pipes the body to it as stdin text —
+      // review/handoff prose that happens to mention "writeFileSync" is data,
+      // not a reason to deny.
       if (subagent && PROTECTED_TARGET.test(h.body)) return { decision: "deny", reason: "subagent may not modify framework state through an interpreter heredoc" };
       if (readOnly) return { decision: "deny", reason: "read-only agent: interpreter heredoc writes files" };
     }
@@ -228,6 +259,7 @@ function classify(command, { readOnly = false, subagent = false, canSaveReviews 
   const cmd = stripHeredocs(command);
   for (const [re, why] of DENY) if (re.test(cmd)) return { decision: "deny", reason: why };
   for (const [re, why] of ASK) if (re.test(cmd)) { ask(why); break; }
+  let cwd = ""; // tracks `cd`/`pushd` across segments of this command (SEC-9)
   for (const raw of segments(cmd)) {
     // Position-independent default deny (flags, wrappers, subshells, quoting).
     if (subagent) {
@@ -245,6 +277,8 @@ function classify(command, { readOnly = false, subagent = false, canSaveReviews 
     }
     const seg = normalizeSegment(raw);
     if (!seg) continue;
+    const cdMatch = CD_CMD.exec(seg);
+    if (cdMatch) { cwd = cdJoin(cwd, cdMatch[1]); continue; }
     // Recurse into `sh -c "<body>"`-style wrappers.
     const wrapped = /^(ba|z|da|k)?sh\s+(-[a-zA-Z]+\s+)*-[a-zA-Z]*c\s+(["'])([\s\S]*)\3\s*$/.exec(seg);
     if (wrapped && depth < 3) {
@@ -266,7 +300,8 @@ function classify(command, { readOnly = false, subagent = false, canSaveReviews 
     const writes = WRITES.find(([re]) => re.test(blank));
     const safe = Boolean(call) && !REDIRECT.test(blank);
     const contentNeutral = /^git\s+(add|commit)\b/.test(seg);
-    if (writes && !safe && subagent && !contentNeutral && PROTECTED_TARGET.test(withoutMessages)) return { decision: "deny", reason: `subagent may not modify framework state through the shell (${writes[1]})` };
+    const inProtectedCwd = cwd && PROTECTED_CWD.test(cwd);
+    if (writes && !safe && subagent && !contentNeutral && (PROTECTED_TARGET.test(withoutMessages) || inProtectedCwd)) return { decision: "deny", reason: `subagent may not modify framework state through the shell (${writes[1]}${inProtectedCwd && !PROTECTED_TARGET.test(withoutMessages) ? ` after cd/pushd into ${cwd}` : ""})` };
     if (writes && !safe && !subagent && /risk-acceptances\.md/i.test(seg)) ask("risk acceptances require human approval");
     if (readOnly && writes && !safe) return { decision: "deny", reason: `read-only agent: ${writes[1]}` };
   }
@@ -280,14 +315,19 @@ try {
   input = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
 } catch { process.exit(0); }
 
-const { decision, reason } = classify(input?.tool_input?.command);
-if (decision !== "allow") {
-  process.stdout.write(JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: decision,
-      permissionDecisionReason: decision === "deny" ? `Blocked: ${reason}. Run it manually if truly intended.` : `${reason} — requires explicit approval.`,
-    },
-  }) + "\n");
+try {
+  const { decision, reason } = classify(input?.tool_input?.command);
+  if (decision !== "allow") {
+    process.stdout.write(JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: decision,
+        permissionDecisionReason: decision === "deny" ? `Blocked: ${reason}. Run it manually if truly intended.` : `${reason} — requires explicit approval.`,
+      },
+    }) + "\n");
+  }
+} catch (e) {
+  // Fail open on internal errors, but say so — see hooks/guard-bash.mjs.
+  process.stderr.write(`guard-bash (standalone): internal error, failing open (${e.message})\n`);
 }
 process.exit(0);

@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 // Model routing CLI.
 //   node scripts/routing.mjs resolve <agent> [--task TASK-ID] [--attempt N] [--unavailable opus,sonnet] [--root dir] [--json]
+//     [--compat-tier TIER]   explicit, human-approved tier for an agent unknown to the registry (never a silent default)
+//     [--peer-model MODEL]   the implementer's resolved model, so an independent review/security dispatch won't collapse onto it
 //   node scripts/routing.mjs check            # routing table + agent frontmatter consistency
 //   node scripts/routing.mjs sync             # (plugin maintainers) write model/effort into agents/*.md from config
 //   node scripts/routing.mjs table            # print tier -> model table
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs, findProjectRoot, pluginFile, loadConfig } from "./lib/project.mjs";
-import { effectiveRouting, checkRouting, resolveModel } from "./lib/routing.mjs";
+import { effectiveRouting, checkRouting, resolveModel, RoutingBlockedError } from "./lib/routing.mjs";
 import { loadRegistry, subagentType } from "./lib/registry.mjs";
 import { parseFrontmatter, setFrontmatterScalars } from "./lib/frontmatter.mjs";
 import { loadTasks } from "./lib/tasks.mjs";
@@ -39,7 +41,9 @@ function main() {
       if (args.flags.attempt === undefined) attempt = t.data.attempts ?? 0;
     }
     const unavailable = typeof args.flags.unavailable === "string" ? args.flags.unavailable.split(",") : [];
-    const res = resolveModel(agent, { root, taskTier, attempt, unavailable });
+    const compatTier = typeof args.flags["compat-tier"] === "string" ? args.flags["compat-tier"] : undefined;
+    const peerModel = typeof args.flags["peer-model"] === "string" ? args.flags["peer-model"] : undefined;
+    const res = resolveModel(agent, { root, taskTier, attempt, unavailable, compatTier, peerModel });
     res.subagent_type = subagentType(agent, root);
     const enabled = loadConfig(root).enabled_agents ?? [];
     res.enabled = enabled.length === 0 || enabled.includes(res.agent) || !registry.agents[res.agent];
@@ -86,6 +90,12 @@ function main() {
 try {
   main();
 } catch (e) {
-  process.stderr.write(`routing.mjs: ${e.message}\n`);
-  process.exitCode = 2;
+  if (e instanceof RoutingBlockedError) {
+    if (json) process.stdout.write(JSON.stringify({ blocked: true, reason: e.reason }, null, 2) + "\n");
+    else process.stderr.write(`BLOCKED: ${e.reason}\n`);
+    process.exitCode = 3;
+  } else {
+    process.stderr.write(`routing.mjs: ${e.message}\n`);
+    process.exitCode = 2;
+  }
 }

@@ -15,6 +15,12 @@ test("glob matching", () => {
   assert.ok(!matchesAny("src/a.ts", ["src/a/**"]));
 });
 
+test("glob matching: nocase option (Windows/macOS path policy parity)", () => {
+  assert.ok(matchesAny("CONFIG/protected-paths.json", ["config/protected-paths.json"], { nocase: true }));
+  assert.ok(!matchesAny("CONFIG/protected-paths.json", ["config/protected-paths.json"], { nocase: false }));
+  assert.ok(matchesAny("SRC\\A\\X.TS", ["src/a/**"], { nocase: true }), "backslash + case folded, as on Windows");
+});
+
 test("conservative overlap", () => {
   assert.equal(globsMayOverlap("src/a/**", "src/b/**"), false);
   assert.equal(globsMayOverlap("src/a/**", "src/a/x.ts"), true);

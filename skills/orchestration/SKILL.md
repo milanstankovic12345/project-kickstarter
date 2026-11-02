@@ -61,7 +61,12 @@ For each task in the batch:
 2. `routing.mjs resolve <agent> --task <ID> --json` gives you
    `subagent_type`, `model` and `enabled`. If `enabled` is false, the
    project disabled this agent: transition the task to `blocked` and report
-   it.
+   it. Keep the returned `model` — pass it as `--peer-model` when you
+   resolve reviewers in step 4. If the agent is unknown to the registry,
+   `resolve` exits BLOCKED (exit code 3) instead of guessing a tier; do not
+   retry with a different agent name on your own — transition the task to
+   `blocked` and ask a human, who can rerun with an explicit
+   `--compat-tier` if that unknown agent is genuinely intended.
 3. Note the base commit: `git rev-parse HEAD`. Reviewers diff against it.
 4. Add a ledger line:
    `reports.mjs progress "TASK-007 → frontend-engineer (sonnet) base=<sha>"`.
@@ -104,8 +109,14 @@ Return only the HANDOFF block described in the protocol.
 1. `tasks.mjs required-reviews <ID> --json` lists the kinds and reviewer
    agents. Security is added automatically for security-sensitive scopes.
 2. For each kind, resolve the reviewer's model with
-   `routing.mjs resolve <reviewer> --json`. Review tiers deliberately
-   differ from the coding tier.
+   `routing.mjs resolve <reviewer> --peer-model <implementer's model from
+   step 2 of Dispatch> --json`. Review tiers deliberately differ from the
+   coding tier, but after model escalation (fix loop, later attempts) the
+   implementer's model can drift onto the same alias as the review tier's
+   default; `--peer-model` makes `resolve` switch to a distinct fallback
+   automatically, or exit BLOCKED if no distinct model is configured. Never
+   dispatch a reviewer on the same model as the implementer just because
+   `resolve` didn't complain — always pass `--peer-model`.
 3. Dispatch all reviewers for the task **in one message**: they are
    independent and read-only. Use this brief:
 

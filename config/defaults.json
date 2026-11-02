@@ -26,7 +26,8 @@
       "high"
     ],
     "require_verified_fix": true,
-    "security_review_on_sensitive_paths": true
+    "security_review_on_sensitive_paths": true,
+    "require_independent_review_model": true
   },
   "task_limits": {
     "max_scope_globs": 12,

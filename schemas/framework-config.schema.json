@@ -43,7 +43,8 @@
         "required_reviews": { "type": "array", "items": { "enum": ["code", "security", "ui", "visual", "architecture"] }, "uniqueItems": true },
         "block_severities": { "type": "array", "items": { "enum": ["critical", "high", "medium", "low", "info"] }, "minItems": 1, "uniqueItems": true },
         "require_verified_fix": { "type": "boolean" },
-        "security_review_on_sensitive_paths": { "type": "boolean" }
+        "security_review_on_sensitive_paths": { "type": "boolean" },
+        "require_independent_review_model": { "type": "boolean" }
       }
     },
     "routing": {

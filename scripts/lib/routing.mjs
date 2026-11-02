@@ -3,6 +3,22 @@
 import { deepMerge, loadConfig } from "./project.mjs";
 import { loadRegistry, loadRouting } from "./registry.mjs";
 
+/**
+ * A routing decision that must stop the dispatch rather than silently
+ * substitute a default (unknown agent with no explicit compatibility tier,
+ * no model left after exhausting fallbacks, or a review/security dispatch
+ * that would collapse onto the implementer's own model). Callers (the CLI,
+ * the orchestrator) surface this as BLOCKED with `reason`, not a crash.
+ */
+export class RoutingBlockedError extends Error {
+  constructor(reason) {
+    super(reason);
+    this.name = "RoutingBlockedError";
+    this.blocked = true;
+    this.reason = reason;
+  }
+}
+
 export function effectiveRouting(root) {
   const base = loadRouting();
   const project = root ? (loadConfig(root).routing ?? {}) : {};
@@ -45,26 +61,52 @@ function strength(model, order) {
   return i === -1 ? -1 : i;
 }
 
+const REVIEW_TIERS = new Set(["review", "security"]);
+
 /**
  * Resolve the model for a dispatch.
  *  agent: registry name (or project specialist with tier in config.specialists)
  *  opts.taskTier: model_tier from the task (overrides agent tier)
  *  opts.attempt: current attempt number (0-based); escalates after threshold
  *  opts.unavailable: models known to be unavailable (skip to fallbacks)
+ *  opts.compatTier: explicit, caller-approved tier to use when the agent is
+ *    unknown (a deliberate compatibility mode — never a silent default)
+ *  opts.peerModel: the model already assigned to the task's implementer, so
+ *    a review/security dispatch can avoid silently collapsing onto it
+ *
+ * Throws RoutingBlockedError (never returns a guessed result) when: the
+ * agent is unknown and no compatTier was given, every candidate model is
+ * unavailable, or an independent review cannot get a model distinct from
+ * peerModel while policy requires that separation.
  */
-export function resolveModel(agent, { root, taskTier, attempt = 0, unavailable = [] } = {}) {
+export function resolveModel(agent, { root, taskTier, attempt = 0, unavailable = [], compatTier, peerModel } = {}) {
   const routing = effectiveRouting(root);
   const registry = loadRegistry();
+  const config = root ? loadConfig(root) : null;
   const short = agent.includes(":") ? agent.split(":").pop() : agent;
-  const specialists = root ? (loadConfig(root).specialists ?? []) : [];
+  const specialists = root ? (config.specialists ?? []) : [];
   const spec = specialists.find((s) => s.name === short);
   let tier = taskTier ?? routing.agentTiers[short] ?? registry.agents[short]?.tier ?? spec?.tier;
   let source = taskTier ? "task.model_tier" : routing.agentTiers[short] ? "project override" : registry.agents[short] ? "registry" : spec ? "specialist" : null;
-  if (!tier) { tier = "coding"; source = "default (unknown agent)"; }
+  if (!tier) {
+    if (!compatTier) {
+      throw new RoutingBlockedError(`unknown agent "${short}": no tier in the registry, project overrides or task; pass an explicit compatibility tier to proceed anyway, or add the agent to config/agent-registry.json`);
+    }
+    tier = compatTier;
+    source = `explicit compatibility override (unknown agent -> ${compatTier})`;
+  }
   const t = routing.tiers[tier];
-  if (!t) throw new Error(`Unknown tier "${tier}"`);
-  const candidates = [t.model, ...(t.fallbacks ?? [])].filter((m) => !unavailable.includes(m));
-  if (candidates.length === 0) throw new Error(`No available model for tier ${tier} (all of ${[t.model, ...(t.fallbacks ?? [])].join(", ")} unavailable)`);
+  if (!t) throw new RoutingBlockedError(`unknown tier "${tier}"`);
+  let candidates = [t.model, ...(t.fallbacks ?? [])].filter((m) => !unavailable.includes(m));
+  if (candidates.length === 0) throw new RoutingBlockedError(`No available model for tier ${tier} (all of ${[t.model, ...(t.fallbacks ?? [])].join(", ")} unavailable)`);
+  const requireIndependentModel = config ? (config.gates?.require_independent_review_model ?? true) : true;
+  if (REVIEW_TIERS.has(tier) && peerModel && requireIndependentModel) {
+    const independent = candidates.filter((m) => m !== peerModel);
+    if (independent.length === 0) {
+      throw new RoutingBlockedError(`independent ${tier} review has no model distinct from the implementer's (${peerModel}); all candidates for tier ${tier} are ${candidates.join(", ")}`);
+    }
+    candidates = independent;
+  }
   let model = candidates[0];
   let escalated = false;
   if (attempt >= routing.escalate_after_attempts) {
