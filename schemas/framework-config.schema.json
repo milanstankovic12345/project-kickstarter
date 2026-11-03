@@ -8,6 +8,7 @@
   "properties": {
     "version": { "const": 1 },
     "generated_by": { "type": "string" },
+    "mode": { "enum": ["delivery", "presales"] },
     "enabled_agents": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }, "uniqueItems": true },
     "agent_aliases": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" } },
     "specialists": {

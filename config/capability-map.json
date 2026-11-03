@@ -132,6 +132,16 @@
         "architecture-reviewer"
       ],
       "reason": "monorepo detected"
+    },
+    {
+      "id": "presales",
+      "when": {
+        "presales_opt_in": true
+      },
+      "enable": [
+        "presales-analyst"
+      ],
+      "reason": "opt-in only: nothing in a repository implies freelance-ad analysis is wanted, so this never auto-fires from discovery; a human enables presales-analyst explicitly by adding it to .claude/agent-framework.json enabled_agents"
     }
   ],
   "specialist_rules": [

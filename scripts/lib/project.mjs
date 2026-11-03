@@ -74,6 +74,8 @@ export function frameworkPaths(root, config = loadConfig(root)) {
     improvements: abs(p.improvements),
     memory: abs(p.memory),
     memoryProjectId: abs(p.memory_project_id),
+    presalesBriefs: abs(p.presales_briefs),
+    presalesPlans: abs(p.presales_plans),
   };
 }
 

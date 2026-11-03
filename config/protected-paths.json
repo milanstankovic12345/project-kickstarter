@@ -117,6 +117,11 @@
       "glob": "project-context/memory/**",
       "agents_allowed": [],
       "reason": "memory records are written only through scripts/memory.mjs, which validates schema, rejects secret-shaped content, and enforces project isolation"
+    },
+    {
+      "glob": "project-context/presales/**",
+      "agents_allowed": [],
+      "reason": "client briefs and presales plans are written only through scripts/presales.mjs, which validates schema, rejects secret-shaped content, and requires an approved brief before a plan may cite it"
     }
   ]
 }

@@ -10,8 +10,11 @@
     "risk_acceptances": "project-context/risk-acceptances.md",
     "improvements": "reports/improvements",
     "memory": "project-context/memory/records.jsonl",
-    "memory_project_id": "project-context/memory/project-id.json"
+    "memory_project_id": "project-context/memory/project-id.json",
+    "presales_briefs": "project-context/presales/briefs.jsonl",
+    "presales_plans": "project-context/presales/plans.jsonl"
   },
+  "mode": "delivery",
   "concurrency": {
     "max_parallel": 3
   },

@@ -63,5 +63,5 @@ test("validator passes on an unmodified copy of the repository", (t) => {
   const r = validate(dir);
   assert.deepEqual(r.errors, []);
   assert.equal(r.code, 0);
-  assert.equal(r.counts.agents, 24);
+  assert.equal(r.counts.agents, 25);
 });

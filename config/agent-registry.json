@@ -130,6 +130,11 @@
       "tier": "reasoning",
       "access": "analyze",
       "always": true
+    },
+    "presales-analyst": {
+      "group": "presales",
+      "tier": "coding",
+      "access": "presales"
     }
   },
   "access_levels": {
@@ -237,6 +242,21 @@
         "Edit"
       ],
       "meaning": "reads evidence, writes proposals only"
+    },
+    "presales": {
+      "must_include": [
+        "Read",
+        "Grep",
+        "Glob",
+        "Bash"
+      ],
+      "must_exclude": [
+        "Agent",
+        "Edit",
+        "Write",
+        "NotebookEdit"
+      ],
+      "meaning": "analyzes untrusted ad text and persists briefs/plans only through scripts/presales.mjs; cannot edit or write application files"
     }
   }
 }
