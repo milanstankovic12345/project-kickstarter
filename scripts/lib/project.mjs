@@ -72,6 +72,8 @@ export function frameworkPaths(root, config = loadConfig(root)) {
     profile: abs(p.profile),
     riskAcceptances: abs(p.risk_acceptances),
     improvements: abs(p.improvements),
+    memory: abs(p.memory),
+    memoryProjectId: abs(p.memory_project_id),
   };
 }
 

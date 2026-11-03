@@ -88,6 +88,8 @@ change that addresses the evidence.
   - `config/protected-paths.json`, `config/model-routing.json` or
     `config/agent-registry.json`;
   - gate settings;
+  - `scripts/memory.mjs` or `schemas/memory.schema.json` (project memory's
+    secret-rejection and project-isolation logic);
   - CLAUDE.md or other global instructions.
 
   Such proposals need `approved_by: <named human>` before anyone applies

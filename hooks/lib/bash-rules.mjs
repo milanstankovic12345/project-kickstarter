@@ -85,13 +85,13 @@ const INTERPRETER_CMD = /^(node|deno|bun|python[0-9.]*|ruby|perl|pwsh|powershell
 const INTERPRETER_WRITE = /\b(writeFile(Sync)?|appendFile(Sync)?|rmSync|rmdirSync|unlink(Sync)?|rename(Sync)?|mkdirSync|copyFile(Sync)?|createWriteStream|truncate(Sync)?|write_text|write_bytes|os\.remove|os\.unlink|os\.rename|shutil\.(rmtree|move|copy\w*)|Set-Content|Out-File|Remove-Item)\b|\bopen\s*\([^)]*,\s*\\?["'][wax+]/;
 
 // Framework state that subagents must never write through the shell.
-export const PROTECTED_TARGET = /(^|[\s"'\/\\=>(])(tasks[\/\\]TASK-\d+[^\s"']*\.md|reports[\/\\](reviews|handoffs|audits|metrics)[\/\\]?|risk-acceptances\.md|agent-framework(\.json|[\/\\]manifest\.json)|protected-paths\.json|model-routing\.json|agent-registry\.json)/i;
+export const PROTECTED_TARGET = /(^|[\s"'\/\\=>(])(tasks[\/\\]TASK-\d+[^\s"']*\.md|reports[\/\\](reviews|handoffs|audits|metrics)[\/\\]?|project-context[\/\\]memory[\/\\]?|risk-acceptances\.md|agent-framework(\.json|[\/\\]manifest\.json)|protected-paths\.json|model-routing\.json|agent-registry\.json)/i;
 
 /** `cd`/`pushd` argument (the rest of the segment, e.g. trailing options, is ignored). */
 const CD_CMD = /^(?:cd|pushd)\s+(\S+)/;
 
 /** Directories that make every write inside them protected, regardless of the write's own path text (SEC-9: `cd reports/reviews && cat > x.md`). */
-const PROTECTED_CWD = /^(tasks|reports[\/\\](reviews|handoffs|audits|metrics))(\/|$)/i;
+const PROTECTED_CWD = /^(tasks|reports[\/\\](reviews|handoffs|audits|metrics)|project-context[\/\\]memory)(\/|$)/i;
 
 /**
  * Join a `cd`/`pushd` target onto a tracked relative cwd (Windows- and
@@ -213,6 +213,7 @@ const SAFE_SCRIPT_ACTIONS = {
   "discover.mjs": [undefined],
   "bootstrap.mjs": ["audit", "plan", "validate"],
   "metrics.mjs": ["summary", "report", "proposals"],
+  "memory.mjs": ["get", "list", "search", "validate"],
 };
 
 /** A framework script call with a known read/validate action and no redirection. */

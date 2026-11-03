@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { readInput, frameworkRoot, emit } from "./lib/common.mjs";
 import { loadConfig, frameworkPaths } from "../scripts/lib/project.mjs";
 import { statusSummary, validateTaskSet } from "../scripts/lib/tasks.mjs";
+import { loadRecords, effectiveValidity } from "../scripts/lib/memory.mjs";
 
 const input = await readInput();
 const root = frameworkRoot(input);
@@ -27,6 +28,18 @@ try {
   if (existsSync(ledger)) {
     const last = readFileSync(ledger, "utf8").trim().split("\n").filter((l) => l.startsWith("- ")).pop();
     if (last) lines.push(`- Last progress: ${last.slice(2, 180)}`);
+  }
+  const { records: memRecords } = loadRecords(frameworkPaths(root, config).memory);
+  if (memRecords.length) {
+    const effective = effectiveValidity(memRecords);
+    const active = memRecords.filter((r) => effective.get(r.id) === "active");
+    const decisions = active.filter((r) => r.type === "decision");
+    const gotchas = active.filter((r) => r.type === "gotcha");
+    if (decisions.length || gotchas.length) {
+      const newest = decisions.sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+      const snippet = newest ? ` (most recent: "${newest.statement.slice(0, 80)}")` : "";
+      lines.push(`- Memory: ${decisions.length} active decision(s), ${gotchas.length} open gotcha(s)${snippet}.`);
+    }
   }
   lines.push("Continue with /project-kickstarter:run-task, inspect with /project-kickstarter:status.");
   emit({ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: lines.slice(0, 10).join("\n") } });

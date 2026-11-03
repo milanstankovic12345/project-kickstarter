@@ -80,12 +80,13 @@ flowchart LR
 | Scripts | [`scripts/`](scripts/) | The deterministic engine and CLIs |
 | Templates | [`templates/`](templates/) | Task, handoff, review, profile, specialist agent |
 | Tests | [`tests/`](tests/) | Unit and integration tests, plus 5 fixture projects |
-| Docs | [`docs/architecture/`](docs/architecture/) | [Initial audit](docs/architecture/initial-audit.md), [research & decisions](docs/architecture/research-and-decisions.md), [task lifecycle](docs/architecture/task-lifecycle.md), [model routing](docs/architecture/model-routing.md), [security model](docs/architecture/security-model.md) |
+| Docs | [`docs/architecture/`](docs/architecture/) | [Initial audit](docs/architecture/initial-audit.md), [research & decisions](docs/architecture/research-and-decisions.md), [task lifecycle](docs/architecture/task-lifecycle.md), [model routing](docs/architecture/model-routing.md), [security model](docs/architecture/security-model.md), [project memory](docs/architecture/memory.md) |
 
 The framework layer lives in the plugin and is never copied into
 projects. Each bootstrapped project gets only its project layer:
 
 - `project-context/project-profile.md`
+- `project-context/memory/` (durable decisions/requirements/conventions/gotchas/lessons; see [project memory](docs/architecture/memory.md))
 - `.claude/agent-framework.json`
 - `.claude/agent-framework/manifest.json`
 - `tasks/`
@@ -362,6 +363,7 @@ containing `.claude/agent-framework.json` or `.git`. Most also accept
 | `scripts/gate.mjs` | `check <ID>` (exit 1 when blocked) |
 | `scripts/routing.mjs` | `resolve <agent> [--task ID] [--attempt N] [--unavailable a,b]`, `table`, `check`, `sync` |
 | `scripts/metrics.mjs` | `summary`, `proposals` |
+| `scripts/memory.mjs` | `add [--type --statement --source --confidence --approval-status --sensitivity --tags --expires]`, `get <ID>`, `list [--type] [--tags] [--all]`, `search <query> [--type] [--tags] [--all] [--limit N=5]`, `supersede <OLD-ID>`, `validate`, `export [--format jsonl\|md] [--include-sensitive]` — see [`docs/architecture/memory.md`](docs/architecture/memory.md) |
 | `scripts/validate.mjs` | repository-wide validation of this plugin |
 
 ## Developing this plugin

@@ -40,6 +40,29 @@ needs must end up in your handoff.
   deploying, changing permissions) need explicit human approval. The
   framework's hooks will ask, and you must not try to route around them.
 
+## 2.5 Project memory
+
+Before unfamiliar work, you may check for a relevant gotcha, convention or
+decision already on record:
+
+```bash
+node "<plugin-root>/scripts/memory.mjs" search "<keyword>" --json --limit 5
+```
+
+Always pass a specific keyword and, where it helps, `--type gotcha|convention|decision`.
+Never run `list` unbounded and never ask for the whole store — only a
+targeted, capped query belongs in your context.
+
+If you discover something worth keeping for later sessions (a gotcha, a
+durable decision, a lesson), record it:
+
+```bash
+node "<plugin-root>/scripts/memory.mjs" add --type gotcha --statement "..." --source "TASK-NNN handoff" --confidence 70
+```
+
+The script rejects anything that looks secret-shaped — don't try to route
+around that, and never put a secret value in a `statement` to "document" it.
+
 ## 3. Evidence rules
 
 - A claim counts only if a command you ran in this session supports it.

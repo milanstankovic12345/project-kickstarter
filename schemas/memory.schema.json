@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project-kickstarter/memory.schema.json",
+  "title": "Project memory record (project-context/memory/records.jsonl, one per line)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "project_id", "type", "statement", "source", "created_at", "confidence", "approval_status", "validity", "tags", "sensitivity"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^MEM-[0-9]{4,}$" },
+    "project_id": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "type": { "enum": ["decision", "requirement", "convention", "gotcha", "lesson", "event"] },
+    "statement": { "type": "string", "minLength": 3, "maxLength": 2000 },
+    "source": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "created_at": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$" },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "approval_status": { "enum": ["proposed", "approved", "rejected"] },
+    "approved_by": { "type": "string", "minLength": 1 },
+    "validity": { "enum": ["active", "expired"] },
+    "expires": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "supersedes": { "type": ["string", "null"], "pattern": "^MEM-[0-9]{4,}$" },
+    "tags": { "type": "array", "maxItems": 10, "items": { "type": "string", "minLength": 1, "maxLength": 40 } },
+    "sensitivity": { "enum": ["public", "internal", "sensitive"] }
+  }
+}

@@ -112,6 +112,11 @@
       "glob": "project-context/risk-acceptances.md",
       "agents_allowed": [],
       "reason": "only a human may accept risk"
+    },
+    {
+      "glob": "project-context/memory/**",
+      "agents_allowed": [],
+      "reason": "memory records are written only through scripts/memory.mjs, which validates schema, rejects secret-shaped content, and enforces project isolation"
     }
   ]
 }

@@ -8,7 +8,9 @@
     "progress": "reports/progress.md",
     "profile": "project-context/project-profile.md",
     "risk_acceptances": "project-context/risk-acceptances.md",
-    "improvements": "reports/improvements"
+    "improvements": "reports/improvements",
+    "memory": "project-context/memory/records.jsonl",
+    "memory_project_id": "project-context/memory/project-id.json"
   },
   "concurrency": {
     "max_parallel": 3

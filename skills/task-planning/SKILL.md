@@ -17,7 +17,16 @@ pass/fail check that a script can run.
 
 1. **Gather context.** Read the goal or spec, the relevant sections of
    `project-context/project-profile.md`, and existing tasks
-   (`tasks.mjs status --json`) so you don't duplicate work.
+   (`tasks.mjs status --json`) so you don't duplicate work. Also check
+   project memory for the feature area, bounded and targeted — never an
+   unbounded dump:
+   ```bash
+   node "<plugin-root>/scripts/memory.mjs" search "<topic keyword>" --json --limit 5 --type gotcha
+   node "<plugin-root>/scripts/memory.mjs" search "<topic keyword>" --json --limit 5 --type convention
+   node "<plugin-root>/scripts/memory.mjs" search "<topic keyword>" --json --limit 5 --type decision
+   ```
+   Cite any active, relevant hit in the task's Context section by id
+   (`memory: MEM-0012`), not by copying its `statement` at length.
 2. **Choose a slicing.** Slice vertically (each task delivers testable
    behaviour) rather than by layer, unless a contract has to land first
    (schema, API, design tokens). Then that contract becomes its own task
