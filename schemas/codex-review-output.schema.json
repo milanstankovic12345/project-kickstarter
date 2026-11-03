@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project-kickstarter/codex-review-output.schema.json",
+  "title": "Structured output contract handed to Codex CLI via --output-schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "findings"],
+  "properties": {
+    "summary": { "type": "string" },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "title", "location"],
+        "properties": {
+          "severity": { "enum": ["critical", "high", "medium", "low", "info"] },
+          "title": { "type": "string", "minLength": 3 },
+          "location": { "type": "string" },
+          "rationale": { "type": "string" }
+        }
+      }
+    }
+  }
+}

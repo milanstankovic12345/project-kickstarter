@@ -13,16 +13,25 @@ import { pluginFile, readJson } from "./project.mjs";
 import { parseFrontmatter, serializeFrontmatter } from "./frontmatter.mjs";
 import { loadRegistry, readAgents } from "./registry.mjs";
 
-export const TARGETS = ["cursor", "codex", "copilot"];
+export const TARGETS = ["cursor", "codex", "copilot", "opencode"];
 export const RUNTIME_REL = ".agent-framework/runtime";
 export const EXPORT_MANIFEST_REL = ".agent-framework/export-manifest.json";
 export const GENERATOR = "project-kickstarter export-ide";
 export const IDE_MARKERS = ["<!-- project-kickstarter:ide:start -->", "<!-- project-kickstarter:ide:end -->"];
 
+// Bumped whenever this target's generated file *shapes* change (new/removed
+// files, renamed paths, changed markers) — not for routine wording tweaks.
+// Recorded per exported file in the manifest so a stale export is visible.
+export const ADAPTER_VERSION = { cursor: 1, codex: 1, copilot: 1, opencode: 1 };
+
 const TARGET_META = {
   cursor: { label: "Cursor", agentRef: (n) => `/agent-${n}`, cmdRef: (c) => `/cmd-${c}` },
   codex: { label: "Codex", agentRef: (n) => `$agent-${n}`, cmdRef: (c) => `$cmd-${c}` },
   copilot: { label: "GitHub Copilot", agentRef: (n) => `the \`${n}\` agent`, cmdRef: (c) => `/${c}` },
+  // OpenCode shares Codex's AGENTS.md + .agents/skills/ convention exactly
+  // (see skills/project-kickstarter/references/ide-compatibility.md), so it
+  // reuses Codex's reference syntax rather than inventing an unverified one.
+  opencode: { label: "OpenCode", agentRef: (n) => `$agent-${n}`, cmdRef: (c) => `$cmd-${c}` },
 };
 
 // What is copied into the project. `to` is relative to the runtime folder.
@@ -256,7 +265,9 @@ export function buildDesired(target, { ci = true, hooks = true } = {}) {
   const body = overview(target, agents, commands);
   if (target === "cursor") {
     add(".cursor/rules/agent-framework.mdc", serializeFrontmatter({ description: "Task-driven multi-agent framework: workflow, rules and role invocation", alwaysApply: true }, `\n${body}\n`), "rule");
-  } else if (target === "codex") {
+  } else if (target === "codex" || target === "opencode") {
+    // Both tools read AGENTS.md as their instructions file; exporting one
+    // after the other updates the same marked section, it never conflicts.
     add("AGENTS.md", body, "instructions", { section: IDE_MARKERS });
   } else {
     add(".github/copilot-instructions.md", body, "instructions", { section: IDE_MARKERS });
@@ -274,7 +285,7 @@ export function buildDesired(target, { ci = true, hooks = true } = {}) {
     ].join("\n")), "instructions");
   }
 
-  if (target === "cursor" || target === "codex") {
+  if (target === "cursor" || target === "codex" || target === "opencode") {
     for (const a of agents) add(`.agents/skills/agent-${a.name}/SKILL.md`, agentSkill(a, accessOf(a.name), target), "agent");
     for (const c of commands) add(`.agents/skills/cmd-${c.name}/SKILL.md`, commandSkill(c, target), "command");
   } else {
@@ -313,11 +324,12 @@ export function planExport(root, target, opts = {}) {
   const read = (rel) => (existsSync(join(root, rel)) ? norm(readFileSync(join(root, rel), "utf8")) : null);
   const actions = [];
 
+  const adapterVersion = ADAPTER_VERSION[target];
   for (const d of desired) {
     const entry = manifest.files[d.path];
     const current = read(d.path);
     const want = sha(d.content);
-    const base = { path: d.path, kind: d.kind, hash: want, section: Boolean(d.section) };
+    const base = { path: d.path, kind: d.kind, hash: want, section: Boolean(d.section), adapter_version: adapterVersion, previous_adapter_version: entry?.adapter_version ?? null };
     if (!d.section) {
       const content = norm(d.content);
       if (current === null) actions.push({ ...base, action: "create", content });
@@ -348,7 +360,7 @@ export function applyExport(root, target, { force = false, ...opts } = {}) {
   const written = [];
   for (const a of p.actions) {
     if (a.action === "stale" || a.action === "unchanged") {
-      if (a.action === "unchanged" && !manifest.files[a.path]) manifest.files[a.path] = { hash: a.hash, kind: a.kind, section: a.section };
+      if (a.action === "unchanged" && !manifest.files[a.path]) manifest.files[a.path] = { hash: a.hash, kind: a.kind, section: a.section, adapter_version: a.adapter_version };
       continue;
     }
     const abs = join(root, a.path);
@@ -367,7 +379,7 @@ export function applyExport(root, target, { force = false, ...opts } = {}) {
     }
     mkdirSync(dirname(abs), { recursive: true });
     writeFileSync(abs, a.content);
-    manifest.files[a.path] = { hash: a.hash, kind: a.kind, section: a.section };
+    manifest.files[a.path] = { hash: a.hash, kind: a.kind, section: a.section, adapter_version: a.adapter_version };
     written.push(a.path);
     a.applied = true;
   }

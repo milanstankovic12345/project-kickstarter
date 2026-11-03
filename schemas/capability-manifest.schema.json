@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project-kickstarter/capability-manifest.schema.json",
+  "title": "Tool integration capability manifest (config/tool-capabilities.json)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "tools"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "tools": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9-]*$" },
+      "additionalProperties": { "$ref": "#/$defs/tool" }
+    }
+  },
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "static_export", "cli_adapter", "full_integration"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "static_export": { "$ref": "#/$defs/tier" },
+        "cli_adapter": { "$ref": "#/$defs/tier" },
+        "full_integration": { "$ref": "#/$defs/tier" }
+      }
+    },
+    "tier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["supported", "status", "notes"],
+      "properties": {
+        "supported": { "type": "boolean" },
+        "status": { "enum": ["VERIFIED", "NOT_VERIFIED", "NOT_SUPPORTED"] },
+        "adapter_version": { "type": "integer", "minimum": 1 },
+        "notes": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -13,6 +13,7 @@ support.
 | **OpenAI Codex CLI** | `AGENTS.md` | — | — | reads `SKILL.md` | ❌ not native — enforce via AGENTS.md protocol + CI |
 | **GitHub Copilot** | `.github/copilot-instructions.md` | — | `.github/copilot-agents.yml` (where supported) | partial | ❌ not native — use instructions + CI |
 | **OpenCode** | `AGENTS.md` | — | — | reads `SKILL.md` | ⚠️ via JS plugins (`opencode.json`), not hook events |
+| **Gemini CLI** | ❌ no verified convention found — treat as `NOT_SUPPORTED` | — | — | ❌ none confirmed | ❌ not implemented |
 | **Cline** | `.clinerules/` (`.clinerules` also works) | `.clinerules/*.md` | workflow files `.clinerules/workflows/` | ⚠️ via workflows | ❌ — emulate with rules + CI |
 | **Windsurf** | `.windsurf/rules/*.md` (legacy `.windsurfrules`) | `.windsurf/rules/` | — | ⚠️ | ❌ |
 | **Antigravity** | `AGENTS.md` / `.agent/rules/` | `.agent/rules/` | — | ⚠️ | ❌ — verify current support at generation time |
@@ -23,6 +24,13 @@ Rules of thumb:
   `CLAUDE.md` pointing at the same rules (one source of truth, thin
   per-IDE wrappers — do not duplicate content).
 - Copy content, adapt format only (frontmatter, `.mdc` headers for Cursor).
+- `scripts/export-ide.mjs` automates this for Cursor, Codex, GitHub Copilot
+  and OpenCode (all `STATIC_EXPORT`, all `NOT_VERIFIED` — generated, never
+  run in the real tool). Gemini CLI has no automated export and is
+  `NOT_SUPPORTED`. `config/tool-capabilities.json` is the authoritative,
+  tested record of this — check it (or
+  `node scripts/capabilities.mjs list`) before telling a user a tool is
+  supported, never state support from memory of this table alone.
 
 ## Hooks: what to install per IDE
 

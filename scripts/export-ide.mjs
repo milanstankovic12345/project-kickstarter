@@ -23,7 +23,9 @@ function strip(p) {
 
 try {
   if (!TARGETS.includes(target)) {
-    process.stdout.write(`usage: export-ide.mjs <${TARGETS.join("|")}> [--project dir] [--dry-run] [--force] [--no-ci] [--no-hooks] [--install-git-hooks] [--json]\n`);
+    const usage = `usage: export-ide.mjs <${TARGETS.join("|")}> [--project dir] [--dry-run] [--force] [--no-ci] [--no-hooks] [--install-git-hooks] [--json]\n`;
+    process.stdout.write(usage);
+    if (target) process.stdout.write(`"${target}" is not an export-ide.mjs target. Run \`node scripts/capabilities.mjs list\` to see every tool's support status and its exact key.\n`);
     process.exitCode = target ? 2 : 0;
   } else {
     const dry = Boolean(args.flags["dry-run"]);
@@ -32,6 +34,7 @@ try {
     if (!dry && args.flags["install-git-hooks"]) git = installPreCommit(root, { runtimeRel: RUNTIME_REL, force: Boolean(args.flags.force) });
     const count = (a) => p.actions.filter((x) => x.action === a).length;
     const conflicts = p.actions.filter((a) => a.action === "conflict" && !a.applied);
+    const upgraded = p.actions.filter((a) => a.previous_adapter_version != null && a.previous_adapter_version < a.adapter_version);
     if (json) {
       process.stdout.write(JSON.stringify({ ...strip(p), git_hook: git }, null, 2) + "\n");
     } else {
@@ -39,6 +42,7 @@ try {
         `${dry ? "Plan" : "Exported"} for ${target} into ${root}`,
         `create=${count("create")} update=${count("update")} unchanged=${count("unchanged")} conflict=${count("conflict")} stale=${count("stale")}`,
         ...p.actions.filter((a) => ["conflict", "stale"].includes(a.action)).map((a) => `  ${a.action.padEnd(8)} ${a.path}  (${a.reason})${a.proposal ? ` -> ${a.proposal}` : ""}`),
+        ...(upgraded.length ? [`  adapter upgraded on ${upgraded.length} file(s) (v${Math.min(...upgraded.map((a) => a.previous_adapter_version))}→v${Math.max(...upgraded.map((a) => a.adapter_version))})`] : []),
       ];
       if (git) lines.push(`git pre-commit hook: ${git.status}${git.path ? ` (${git.path})` : ""}`);
       if (!dry) {

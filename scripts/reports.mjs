@@ -121,7 +121,7 @@ function main() {
     return out({ ok: res.errors.length === 0, message: `${rel(root, target)}`, errors: res.errors, warnings: res.warnings });
   }
 
-  if (!["code", "security", "ui", "visual", "architecture"].includes(reviewKind)) throw new Error("review kind must be code|security|ui|visual|architecture");
+  if (!["code", "security", "ui", "visual", "architecture", "codex"].includes(reviewKind)) throw new Error("review kind must be code|security|ui|visual|architecture|codex");
   const target = reviewPath(root, id, reviewKind, config);
   if (action === "save") {
     const text = readStdin();

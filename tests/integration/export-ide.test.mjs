@@ -25,7 +25,7 @@ function allFiles(dir) {
   return out;
 }
 
-for (const target of ["cursor", "codex", "copilot"]) {
+for (const target of ["cursor", "codex", "copilot", "opencode"]) {
   test(`export ${target}: creates files, second run changes nothing`, (t) => {
     const dir = tempProject({}, { framework: false });
     t.after(() => cleanup(dir));
@@ -52,6 +52,24 @@ test("--dry-run writes nothing; unknown target exits 2", (t) => {
   assert.ok(!existsSync(join(dir, ".agent-framework")));
   assert.ok(!existsSync(join(dir, "AGENTS.md")));
   assert.equal(run("scripts/export-ide.mjs", ["vim", "--project", dir]).code, 2);
+});
+
+test("an unsupported target (gemini) exits 2 and points at the capability manifest, not a stack trace", (t) => {
+  const dir = tempProject({}, { framework: false });
+  t.after(() => cleanup(dir));
+  const r = run("scripts/export-ide.mjs", ["gemini", "--project", dir]);
+  assert.equal(r.code, 2);
+  assert.doesNotMatch(r.stderr, /\b(SyntaxError|ReferenceError|TypeError|RangeError):/);
+  assert.match(r.stdout, /capabilities\.mjs list/);
+  assert.ok(!existsSync(join(dir, ".agent-framework")));
+});
+
+test("manifest file keys always use forward slashes on disk, whatever the host OS separator is", (t) => {
+  const dir = tempProject({}, { framework: false });
+  t.after(() => cleanup(dir));
+  exportTo(dir, "codex");
+  const manifest = JSON.parse(readFileSync(join(dir, ".agent-framework/export-manifest.json"), "utf8"));
+  for (const key of Object.keys(manifest.files)) assert.doesNotMatch(key, /\\/, key);
 });
 
 test("a customized file is not overwritten: proposal written, exit 3; --force keeps a backup", (t) => {
@@ -100,11 +118,22 @@ test("AGENTS.md keeps existing content; only the marked section is managed", (t)
   assert.equal((text.match(/project-kickstarter:ide:start/g) ?? []).length, 1);
 });
 
+test("codex and opencode share one AGENTS.md section without conflicting with each other", (t) => {
+  const dir = tempProject({}, { framework: false });
+  t.after(() => cleanup(dir));
+  assert.equal(exportTo(dir, "codex").code, 0);
+  assert.match(readFileSync(join(dir, "AGENTS.md"), "utf8"), /project-kickstarter:ide:start/);
+  const r = exportTo(dir, "opencode");
+  assert.equal(r.code, 0, r.stdout);
+  assert.equal(counts(r.stdout).conflict, undefined);
+  assert.equal(exportTo(dir, "codex").code, 0);
+});
+
 test("secret values in the project never reach exported files", (t) => {
   const secret = "sk-live-SUPER-SECRET-VALUE-123";
   const dir = tempProject({ ".env": `API_KEY=${secret}\n` }, { framework: false });
   t.after(() => cleanup(dir));
-  for (const target of ["cursor", "codex", "copilot"]) {
+  for (const target of ["cursor", "codex", "copilot", "opencode"]) {
     const r = exportTo(dir, target);
     assert.ok([0, 3].includes(r.code), r.stdout + r.stderr);
   }

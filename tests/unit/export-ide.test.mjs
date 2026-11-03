@@ -53,8 +53,8 @@ for (const target of TARGETS) {
   });
 }
 
-test("cursor and codex agents/commands are skills whose name matches the folder", () => {
-  for (const target of ["cursor", "codex"]) {
+test("cursor, codex and opencode agents/commands are skills whose name matches the folder", () => {
+  for (const target of ["cursor", "codex", "opencode"]) {
     const skills = buildDesired(target).filter((f) => f.path.startsWith(".agents/skills/"));
     assert.ok(skills.length >= 30);
     for (const f of skills) {
@@ -81,6 +81,15 @@ test("cursor gets an always-on .mdc rule and hooks; codex gets an AGENTS.md sect
   assert.ok(!codex.some((f) => f.path.startsWith(".cursor/") || f.path.startsWith(".github/agents")));
 });
 
+test("opencode shares the AGENTS.md section and .agents/skills/ with codex, gets no hooks or copilot files", () => {
+  const opencode = buildDesired("opencode");
+  const agentsMd = opencode.find((f) => f.path === "AGENTS.md");
+  assert.ok(agentsMd.section, "AGENTS.md is a marker section, never overwritten");
+  assert.ok(opencode.some((f) => f.path.startsWith(".agents/skills/agent-")));
+  assert.ok(opencode.some((f) => f.path.startsWith(".agents/skills/cmd-")));
+  assert.ok(!opencode.some((f) => f.path.startsWith(".cursor/") || f.path.startsWith(".github/agents") || f.path.startsWith(".github/prompts") || f.path === ".github/copilot-instructions.md"));
+});
+
 test("copilot gets agents with mapped tools, prompts, instructions and scoped instructions", () => {
   const files = buildDesired("copilot");
   const reviewer = files.find((f) => f.path === ".github/agents/code-reviewer.agent.md");
@@ -104,6 +113,12 @@ test("--no-ci drops the workflow", () => {
 
 test("output is deterministic", () => {
   for (const t of TARGETS) assert.deepEqual(buildDesired(t), buildDesired(t));
+});
+
+test("every generated path uses forward slashes, regardless of the host OS path separator", () => {
+  for (const t of TARGETS) {
+    for (const f of buildDesired(t)) assert.doesNotMatch(f.path, /\\/, f.path);
+  }
 });
 
 test("cursor adapter translates payloads in both directions", () => {

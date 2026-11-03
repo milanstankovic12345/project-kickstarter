@@ -451,15 +451,35 @@ This repository dogfoods the framework. It contains its own
 The interview skill works in Claude Code as
 `/project-kickstarter:project-kickstarter`. It also works in other agents
 that read the standard `SKILL.md` format. The framework layer (agents,
-hooks, commands, scripts) is Claude Code-specific. For **Cursor, Codex and
-GitHub Copilot** it can be exported into the project (next section). In
-other IDEs the interview falls back to its built-in templates for the agent
-team and task plan.
+hooks, commands, scripts) is Claude Code-specific. For **Cursor, Codex,
+GitHub Copilot and OpenCode** it can be exported into the project (next
+section). In other IDEs the interview falls back to its built-in templates
+for the agent team and task plan.
 
-### Framework layer in Cursor, Codex and GitHub Copilot
+Compatibility claims here can drift from reality as the exporter changes,
+so they are not just prose: `config/tool-capabilities.json` is the actual
+source of truth, checked by `tests/unit/capabilities.test.mjs`. Run
+`node scripts/capabilities.mjs list` for the live status of every tool, at
+three tiers:
+
+- **STATIC_EXPORT** — generates instructions the tool can read.
+- **CLI_ADAPTER** — can run something through the tool's real CLI.
+- **FULL_INTEGRATION** — task state, handoff and review wired into that tool.
+
+Each tier is additionally marked `VERIFIED` (checked against the real tool,
+see `docs/ide/smoke-test.md`), `NOT_VERIFIED` (generated, never run in the
+tool), or `NOT_SUPPORTED` (not implemented). As of this writing: Cursor,
+Codex and Copilot have `STATIC_EXPORT: NOT_VERIFIED`; Codex additionally has
+`CLI_ADAPTER: VERIFIED` (the advisory review adapter below); OpenCode has
+`STATIC_EXPORT: NOT_VERIFIED` (new, reusing Codex's conventions); **Gemini
+CLI is `NOT_SUPPORTED`** — no verified instructions/skills convention for it
+was found, so nothing was generated rather than guessing. No tool reaches
+`FULL_INTEGRATION` except Claude Code itself.
+
+### Framework layer in Cursor, Codex, GitHub Copilot and OpenCode
 
 ```bash
-node scripts/export-ide.mjs <cursor|codex|copilot> --project /path/to/your-project
+node scripts/export-ide.mjs <cursor|codex|copilot|opencode> --project /path/to/your-project
 # then, inside that project:
 node .agent-framework/runtime/scripts/bootstrap.mjs apply
 node .agent-framework/runtime/scripts/tasks.mjs validate
@@ -475,13 +495,13 @@ them to `.agent-framework/runtime/` and points every exported text at that
 folder. Agents and commands become each IDE's native files. The scripts keep
 enforcing the task state machine, file scopes, handoffs and the review gate.
 
-| | Cursor | Codex | GitHub Copilot |
-|---|---|---|---|
-| Always-on rules | `.cursor/rules/agent-framework.mdc` | marked section in `AGENTS.md` | marked section in `.github/copilot-instructions.md`, plus `.github/instructions/agent-framework-artifacts.instructions.md` |
-| Roles (agents) | `.agents/skills/agent-<name>/SKILL.md`, run with `/agent-<name>` | same folder, run with `$agent-<name>` | `.github/agents/<name>.agent.md`, pick it in the agent picker |
-| Commands | `.agents/skills/cmd-<name>/SKILL.md`, run with `/cmd-<name>` | same, `$cmd-<name>` | `.github/prompts/<name>.prompt.md`, run with `/<name>` |
-| Guard hooks | `.cursor/hooks.json` (experimental) | none | none |
-| Backstop (all) | `.github/workflows/agent-framework.yml` and, with `--install-git-hooks`, a git pre-commit hook; both run `ci-check.mjs` | same | same |
+| | Cursor | Codex | GitHub Copilot | OpenCode |
+|---|---|---|---|---|
+| Always-on rules | `.cursor/rules/agent-framework.mdc` | marked section in `AGENTS.md` | marked section in `.github/copilot-instructions.md`, plus `.github/instructions/agent-framework-artifacts.instructions.md` | marked section in `AGENTS.md` (shared with Codex) |
+| Roles (agents) | `.agents/skills/agent-<name>/SKILL.md`, run with `/agent-<name>` | same folder, run with `$agent-<name>` | `.github/agents/<name>.agent.md`, pick it in the agent picker | same folder as Codex, invocation syntax unverified |
+| Commands | `.agents/skills/cmd-<name>/SKILL.md`, run with `/cmd-<name>` | same, `$cmd-<name>` | `.github/prompts/<name>.prompt.md`, run with `/<name>` | same folder as Codex, invocation syntax unverified |
+| Guard hooks | `.cursor/hooks.json` (experimental) | none | none | none (OpenCode's hooks are JS plugins, not implemented here) |
+| Backstop (all) | `.github/workflows/agent-framework.yml` and, with `--install-git-hooks`, a git pre-commit hook; both run `ci-check.mjs` | same | same | same |
 
 Differences from Claude Code, by design:
 
@@ -506,15 +526,27 @@ Differences from Claude Code, by design:
   prompts, which are user-global only; and parallel dispatch in any IDE.
 - `bootstrap.mjs apply` still writes a README section that names the Claude
   Code commands. Edit it if your team does not use Claude Code.
-- Cursor and Codex both use `.agents/skills/`. Exporting both into one
-  project works, but the files then carry the last export's command syntax.
+- Cursor, Codex and OpenCode all use `.agents/skills/`. Exporting more than
+  one into the same project works, but the files then carry the last
+  export's reference syntax. Codex and OpenCode additionally share one
+  `AGENTS.md` section — exporting either updates it, never conflicts with
+  the other.
+- **OpenCode is new and less certain than the other three.** Its
+  instructions-file and skills-folder conventions are documented
+  (`skills/project-kickstarter/references/ide-compatibility.md`), but its
+  exact skill/command invocation syntax is not — the exported files reuse
+  Codex's `$agent-<name>`/`$cmd-<name>` reference text as a placeholder, not
+  a confirmed OpenCode convention. See `config/tool-capabilities.json`.
 
 File formats were taken from the vendors' documentation (Cursor rules,
 skills and hooks; Codex skills; Copilot custom agents, prompt files and
-instructions). **Nothing has been run inside the three IDEs.** Automated
-tests cover the exporter, the vendored scripts running standalone and the
-Cursor adapter run as a process. Before relying on an IDE, open an exported
-project in it and run one task end to end.
+instructions; OpenCode's shared `AGENTS.md`/skills convention). **Nothing
+has been run inside any of the four IDEs.** Automated tests cover the
+exporter, the vendored scripts running standalone and the Cursor adapter run
+as a process. Before relying on an IDE, open an exported project in it and
+run one task end to end — `docs/ide/smoke-test.md` (vendored into every
+export) is the checklist for doing that and recording the result back into
+`config/tool-capabilities.json`.
 
 Usage, in order:
 
@@ -601,6 +633,22 @@ npx codex-marketplace add milanstankovic12345/project-kickstarter --skills
 - Codex has no native hook events — the generated kit enforces rules via
   `AGENTS.md` + CI, documented in `docs/kickstart/hooks-report.md`.
 
+**This is config export, not an invocation.** `scripts/export-ide.mjs
+codex` only writes the files above; it never runs the `codex` binary. A
+separate, optional **Codex CLI review adapter**
+(`scripts/codex-review.mjs`, built on `scripts/lib/codex-adapter.mjs`) does
+spawn the real, locally-installed `codex exec review` to get a second,
+read-only opinion on a task's diff. It is always advisory (`kind: "codex"`
+reviews never count toward the required-review gate unless a human
+explicitly opts a task into it) and is never represented as a Claude
+subagent. It authenticates via whatever `codex login` session already
+exists on the machine (ChatGPT subscription or API key, whichever the
+local Codex CLI is logged in with) — the adapter does not manage or require
+its own API key, and fails gracefully (exit 0, no-op) if `codex` isn't
+installed or isn't logged in. See `scripts/lib/codex-adapter.mjs` for the
+safety constraints (read-only, `shell:false`, argv-only, path-contained,
+timeout + cancellation, bounded output, no-secrets audit log).
+
 ### 4. OpenCode
 
 OpenCode discovers skills from `.agents/skills/`, `.opencode/skills/`, and
@@ -615,6 +663,11 @@ git clone https://github.com/milanstankovic12345/project-kickstarter.git ~/.agen
 - Skill names must be lowercase-with-hyphens — `project-kickstarter`
   complies. Enforcement is via JS plugins/config rather than hook events.
 
+**The full framework layer (not just the interview skill) is now also
+exportable:** `node scripts/export-ide.mjs opencode` (see the table above).
+It is `STATIC_EXPORT: NOT_VERIFIED` — see
+`node scripts/capabilities.mjs show opencode`.
+
 ### 5. GitHub Copilot
 
 ```bash
@@ -628,6 +681,17 @@ git clone https://github.com/milanstankovic12345/project-kickstarter.git ~/.copi
 - For team repos, commit the generated `.github/` config files so every
   teammate gets them on clone.
 - Hook events are not native; rules + CI enforcement is documented instead.
+
+### Gemini CLI: not supported
+
+Gemini CLI is **not** one of the tools this framework targets. There is no
+verified instructions-file or skills-folder convention for it in this
+repository's research, so nothing is generated for it, rather than guessing
+at a format and shipping something unverifiable. It is listed as
+`NOT_SUPPORTED` at every tier in `config/tool-capabilities.json` — run
+`node scripts/capabilities.mjs show gemini-cli` to see why. If you confirm a
+convention for it, that manifest entry (and `scripts/lib/export-ide.mjs`) is
+where support would be added.
 
 ### 6. Antigravity
 
